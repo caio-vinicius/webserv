@@ -1,0 +1,29 @@
+name: make
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '**.cpp'
+      - '**.hpp'
+  push:
+    paths:
+      - '**.cpp'
+      - '**.hpp'
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Install Clang 12 and Make
+      run: |
+        sudo apt-get update
+        sudo apt-get -y install clang-12 make
+
+    - name: Build project
+      run: |
+        make
