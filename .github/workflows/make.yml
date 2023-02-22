@@ -19,10 +19,11 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Install Clang 12 and Make
-      run: |
-        sudo apt-get update
-        sudo apt-get -y install clang-12 make
+    - name: Set up Clang 12
+      uses: egor-tensin/setup-clang@v1
+      with:
+        version: 12
+        platform: x64
 
     - name: Build project
       run: |
