@@ -10,10 +10,11 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#define PORT 8888
+#define PORT 8080
 
 int main()
 {
+
     int sockfd, newsockfd, n;
     struct sockaddr_in serv_addr, cli_addr;
     socklen_t clilen;
@@ -31,7 +32,7 @@ int main()
     // Configura o endereço do servidor
     memset(&serv_addr, 0, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = INADDR_ANY;
+    serv_addr.sin_addr.s_addr = inet_addr("0.0.0.1");
     serv_addr.sin_port = htons(PORT);
 
     // Liga o socket ao endereço e porta
