@@ -32,12 +32,12 @@ class Config {
     std::string _filename;
 
  public:
-    Config(void) {}
-    explicit Config(std::string const filename): _filename(filename) {}
-    void addServer(void) {}
-    ~Config(void) {}
+    Config(void);
+    explicit Config(std::string const filename);
+    void addServer(void);
+    ~Config(void);
 };  // class Config
 
 }  // namespace ft
 
-#endif  // CONFIG_HPP_
+#endif // CONFIG_HPP_
