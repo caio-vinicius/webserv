@@ -15,9 +15,6 @@ int main(int argc, char **argv) {
     }
     ft::Config config(configFilePath);
 
-    // for (std::map<string, string>::iterator it = config.params.begin(); it != config.params.end(); it++)
-    //     std::cout << it->first << " " << it->second << std::endl;
-
     std::cout << config.params["autoindex"] << std::endl;
     std::cout << config.server["localhost:8080;"].params["server_name"] << std::endl;
     std::cout << config.server["localhost:8081;"].params["server_name"] << std::endl;

@@ -58,8 +58,7 @@ ft::Server     ft::Config::serverContext(std::ifstream &configFile) {
                 server.location[path] = locationContext(configFile);
             } else if (line.find("}") != std::string::npos) {
                 return server;
-            }
-            else {
+            } else {
                 lineStream >> key >> value;
                 //checar se param é válido
                 server.params[key] = value;
