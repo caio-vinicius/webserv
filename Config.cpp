@@ -7,6 +7,8 @@
 #include <fstream>
 #include <sstream>
 #include "./Config.hpp"
+#include "Utils.hpp"
+#include <poll.h>
 
 
 ft::Config::Config(std::string const filename) : _filename(filename) {
@@ -34,6 +36,7 @@ ft::Location    ft::Config::locationContext(std::ifstream &configFile) {
                 return location;
             } else {
                 lineStream >> key >> value;
+                value = remove_chr(value, ';');
                 // checar se param é válido
                 location.params[key] = value;
             }
@@ -59,6 +62,7 @@ ft::Server     ft::Config::serverContext(std::ifstream &configFile) {
             } else {
                 lineStream >> key >> value;
                 // checar se param é válido
+                value = remove_chr(value, ';');
                 server.params[key] = value;
             }
         }
@@ -82,6 +86,7 @@ void    ft::Config::httpContext(std::ifstream &configFile) {
             } else {
                 lineStream >> key >> value;
                 // checar se param é válido
+                value = remove_chr(value, ';');
                 this->params[key] = value;
             }
         }
