@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string>
+#include <cstdlib>
 #include <fstream>
 #include <sstream>
 #include "./Config.hpp"
@@ -14,7 +15,7 @@ ft::Config::Config(std::string const filename) : _filename(filename) {
     std::ifstream configFile(this->_filename.c_str());
 
     if (!configFile.is_open()) {
-        exit(EXIT_FAILURE);
+        exit(-1);
     }
     this->load(configFile);
     std::cout << "Config file loaded" << std::endl;
