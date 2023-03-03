@@ -4,10 +4,8 @@
 #include <iostream>
 #include <string>
 #include <fstream>
-#include <stdlib.h>
 #include <sstream>
-
-#include "Config.hpp"
+#include "./Config.hpp"
 
 
 ft::Config::Config(std::string const filename) : _filename(filename) {
@@ -33,10 +31,9 @@ ft::Location    ft::Config::locationContext(std::ifstream &configFile) {
         if (!line.empty()) {
             if (line.find("}") != std::string::npos) {
                 return location;
-            }
-            else {
+            } else {
                 lineStream >> key >> value;
-                //checar se param é válido
+                // checar se param é válido
                 location.params[key] = value;
             }
         }
@@ -60,7 +57,7 @@ ft::Server     ft::Config::serverContext(std::ifstream &configFile) {
                 return server;
             } else {
                 lineStream >> key >> value;
-                //checar se param é válido
+                // checar se param é válido
                 server.params[key] = value;
             }
         }
@@ -80,11 +77,10 @@ void    ft::Config::httpContext(std::ifstream &configFile) {
                 server = serverContext(configFile);
                 this->server[server.params["listen"]] = server;
             } else if (line.find("}") != std::string::npos) {
-                return ;
-            }
-            else {
+                return;
+            } else {
                 lineStream >> key >> value;
-                //checar se param é válido
+                // checar se param é válido
                 this->params[key] = value;
             }
         }
@@ -100,10 +96,10 @@ void ft::Config::load(std::ifstream &configFile) {
         if (!line.empty()) {
             if (line.find("http") == std::string::npos) {
                 std::cout << "ERROR!! On line:" << line << std::endl;
-                return ;
+                return;
             }
             httpContext(configFile);
         }
     }
-    return ;
+    return;
 }

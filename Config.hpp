@@ -12,11 +12,11 @@ namespace ft {
 
 class Location {
  public:
-    Location(void) {};
+    Location(void) {}
 
     Location(const Location& obj) {
-		*this = obj;
-	}
+        *this = obj;
+    }
 
     Location&    operator=(const Location& obj) {
         this->params = obj.params;
@@ -29,11 +29,11 @@ class Location {
 
 class Server {
  public:
-    Server(void) {};
+    Server(void) {}
 
     Server(const Server& obj) {
-		*this = obj;
-	}
+        *this = obj;
+    }
 
     Server&    operator=(const Server& obj) {
         this->params = obj.params;
@@ -52,7 +52,7 @@ class Config {
     std::map<string, Server> server;
     std::string _filename;
 
-    Config(void){};
+    Config(void) {}
     explicit Config(std::string const filename);
     ~Config(void);
 
@@ -64,4 +64,4 @@ class Config {
 
 }  // namespace ft
 
-#endif // CONFIG_HPP_
+#endif  // CONFIG_HPP_
