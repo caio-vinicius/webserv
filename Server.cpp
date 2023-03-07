@@ -18,11 +18,20 @@ ft::Server::Server(void) {
 ft::Server::Server(Config config): _config(config) {
     std::cout << "Server created" << std::endl;
     std::map<std::string, ft::Config::Server>::iterator it = this->_config.server.begin();
+
+    size_t size = this->_config.server.size();
+    pollfd *fds = new pollfd[size];
+    size_t i = 0;
     for (; it != this->_config.server.end(); it++) {
         int sockfd = socket(AF_INET, SOCK_STREAM, 0);
         it->second.sockfd = sockfd;
+        i++;
+        fds[i].fd = sockfd;
+        fds[i].events = POLLIN;
+        std::cout << fds[i].fd << fds[i].events << std::endl;
         this->_sockets.insert(sockfd);
     }
+
     int opt;
     setsockopt(it->second.sockfd,
         SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
@@ -33,34 +42,31 @@ ft::Server::Server(Config config): _config(config) {
     server_addr.sin_port = htons(8080);
     bind(it->second.sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr));
     listen(it->second.sockfd, 5);
-    socklen_t clilen;
-    struct sockaddr_in cli_addr;
-    clilen = sizeof(cli_addr);
-    int newsockfd = accept(it->second.sockfd, (struct sockaddr *)&cli_addr, &clilen);
-    char buffer[1024];
-    memset(buffer, 0, sizeof(buffer));
-    recv(newsockfd, buffer, sizeof(buffer), 0);
-    send(newsockfd, buffer, sizeof(buffer), 0);
-    close(newsockfd);
-    close(it->second.sockfd);
-    pollfd fds[1];
-    fds[0].fd = it->second.sockfd;
-    fds[0].events = POLLIN;
-    int ret = poll(fds, 1, 1000);
-    std::cout << ret << std::endl;
-    if (ret == -1) {
-        std::cout << "Error" << std::endl;
-    }
-    else if (ret == 0) {
-        std::cout << "Timeout" << std::endl;
-    }
-    else {
+    std::cout << "hello" << std::endl;
+    while (true) {
+        int ret = poll(fds, 1, -1);
+
+
+        // std::cout << ret << std::endl;
+        if (ret == -1) {
+            std::cout << "Error" << std::endl;
+        }
+        else if (ret == 0) {
+            std::cout << "Timeout" << std::endl;
+        }
         if (fds[0].revents & POLLIN) {
             std::cout << "POLLIN" << std::endl;
         }
-        if (fds[0].revents & POLLOUT) {
-            std::cout << "POLLOUT" << std::endl;
-        }
+        socklen_t clilen;
+        struct sockaddr_in cli_addr;
+        clilen = sizeof(cli_addr);
+        int newsockfd = accept(it->second.sockfd, (struct sockaddr *)&cli_addr, &clilen);
+        char buffer[1024];
+        memset(buffer, 0, sizeof(buffer));
+        recv(newsockfd, buffer, sizeof(buffer), 0);
+        send(newsockfd, buffer, sizeof(buffer), 0);
+        close(newsockfd);
+        close(it->second.sockfd);
     }
 }
 
