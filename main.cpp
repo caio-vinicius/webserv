@@ -3,7 +3,8 @@
 
 #include <stdlib.h>
 #include <iostream>
-#include "./Config.hpp"
+#include "Config.hpp"
+#include "Server.hpp"
 
 int main(int argc, char **argv) {
     const char* configFilePath = "./webserv.conf";
@@ -25,4 +26,7 @@ int main(int argc, char **argv) {
         ["return"] << std::endl;
     std::cout << config.server["localhost:8080"].location["/test"].params\
         ["fastcgi_pass"] << std::endl;
+
+    ft::Server server;
+    //server.run();
 }

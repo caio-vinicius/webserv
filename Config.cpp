@@ -25,9 +25,9 @@ ft::Config::Config(std::string const filename) : _filename(filename) {
 
 ft::Config::~Config() {}
 
-ft::Location    ft::Config::locationContext(std::ifstream &configFile) {
+ft::Config::Location    ft::Config::locationContext(std::ifstream &configFile) {
     std::string line, key, value;
-    ft::Location   location = ft::Location();
+    ft::Config::Location   location = ft::Config::Location();
 
     while (std::getline(configFile, line)) {
         std::istringstream lineStream(line);
@@ -46,9 +46,9 @@ ft::Location    ft::Config::locationContext(std::ifstream &configFile) {
     exit(-1);
 }
 
-ft::Server     ft::Config::serverContext(std::ifstream &configFile) {
+ft::Config::Server     ft::Config::serverContext(std::ifstream &configFile) {
     std::string line, context, path, key, value;
-    ft::Server    server = ft::Server();
+    ft::Config::Server    server = ft::Config::Server();
     Location    location = Location();
 
     while (std::getline(configFile, line)) {
@@ -72,7 +72,7 @@ ft::Server     ft::Config::serverContext(std::ifstream &configFile) {
 }
 void    ft::Config::httpContext(std::ifstream &configFile) {
     std::string line, key, value;;
-    ft::Server  server = Server();
+    ft::Config::Server  server = Server();
 
 
     while (std::getline(configFile, line)) {
