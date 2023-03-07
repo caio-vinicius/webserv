@@ -18,6 +18,7 @@ class Server {
 
  private:
     Config _config;
+    struct pollfd *pfds;
 
 }; // class Server
 

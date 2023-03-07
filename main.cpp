@@ -27,6 +27,6 @@ int main(int argc, char **argv) {
     std::cout << config.server["localhost:8080"].location["/test"].params\
         ["fastcgi_pass"] << std::endl;
 
-    ft::Server server;
+    ft::Server server(config);
     //server.run();
 }
