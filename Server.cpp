@@ -15,16 +15,15 @@ ft::Server::Server(void) {
 }
 
 
-ft::Server::Server( Config config ) {
-    this->_config = config;
+ft::Server::Server(Config config): _config(config) {
     std::cout << "Server created" << std::endl;
     std::map<std::string, ft::Config::Server>::iterator it = this->_config.server.begin();
     for (; it != this->_config.server.end(); it++) {
         int sockfd = socket(AF_INET, SOCK_STREAM, 0);
         it->second.sockfd = sockfd;
+        this->_sockets.insert(sockfd);
     }
     int opt;
-    it = this->_config.server.begin();
     setsockopt(it->second.sockfd,
         SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
     struct sockaddr_in server_addr;
@@ -44,6 +43,25 @@ ft::Server::Server( Config config ) {
     send(newsockfd, buffer, sizeof(buffer), 0);
     close(newsockfd);
     close(it->second.sockfd);
+    pollfd fds[1];
+    fds[0].fd = it->second.sockfd;
+    fds[0].events = POLLIN;
+    int ret = poll(fds, 1, 1000);
+    std::cout << ret << std::endl;
+    if (ret == -1) {
+        std::cout << "Error" << std::endl;
+    }
+    else if (ret == 0) {
+        std::cout << "Timeout" << std::endl;
+    }
+    else {
+        if (fds[0].revents & POLLIN) {
+            std::cout << "POLLIN" << std::endl;
+        }
+        if (fds[0].revents & POLLOUT) {
+            std::cout << "POLLOUT" << std::endl;
+        }
+    }
 }
 
 

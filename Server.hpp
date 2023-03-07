@@ -4,8 +4,9 @@
 #ifndef SERVER_HPP_
 #define SERVER_HPP_
 
-#include <vector>
+#include <set>
 #include "Config.hpp"
+#include "poll.h"
 
 namespace ft {
 
@@ -18,7 +19,8 @@ class Server {
 
  private:
     Config _config;
-    struct pollfd *pfds;
+    std::set<int> _sockets;
+    struct pollfd *_pfds;
 
 }; // class Server
 
