@@ -38,6 +38,7 @@ class Config {
             *this = obj;
         }
 
+        
         Server&    operator=(const Server& obj) {
             this->params = obj.params;
             this->location = obj.location;

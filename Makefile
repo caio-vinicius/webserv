@@ -4,8 +4,12 @@ all: $(NAME)
 
 SRCS = main.cpp Utils.cpp Config.cpp Server.cpp
 
+CFLAGS := -Wall -Wextra -Wfatal-errors -std=c++98 -pedantic -pedantic-errors
+
+CC := c++
+
 $(NAME): main.cpp
-	c++ -Wall -Wextra -Wfatal-errors -std=c++98 -pedantic -pedantic-errors -o $(NAME) $(SRCS)
+	$(CC) $(CFLAGS) -o $(NAME) $(SRCS)
 
 clean:
 	rm -f $(NAME)

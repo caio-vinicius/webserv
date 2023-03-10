@@ -16,6 +16,7 @@ class Server {
     Server(Config config);
     virtual ~Server();
     void run();
+    int getPort();
 
  private:
     Config _config;
