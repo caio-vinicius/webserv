@@ -38,7 +38,7 @@ class Config {
             *this = obj;
         }
 
-        
+
         Server&    operator=(const Server& obj) {
             this->params = obj.params;
             this->location = obj.location;
@@ -48,7 +48,6 @@ class Config {
 
         std::map<string, string> params;
         std::map<string, Location> location;
-        int sockfd;
     }; // class Server
 
     std::map<string, string> params;

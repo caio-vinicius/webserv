@@ -4,9 +4,10 @@
 #ifndef SERVER_HPP_
 #define SERVER_HPP_
 
-#include <set>
+#include <vector>
 #include "Config.hpp"
 #include <poll.h>
+#include <arpa/inet.h>
 
 namespace ft {
 
@@ -20,8 +21,9 @@ class Server {
 
  private:
     Config _config;
-    std::set<int> _sockets;
-    struct pollfd *_pfds;
+    std::vector<int> _sockets;
+    std::vector<struct pollfd> _pollfds;
+    std::vector<struct sockaddr_in> _sockaddrs;
 
 }; // class Server
 
