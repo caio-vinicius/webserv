@@ -3,13 +3,18 @@
 
 #include <stdlib.h>
 #include <iostream>
-#include "./Config.hpp"
-#include "./Server.hpp"
-
-
+#include <csignal>
+#include <cstring>
+#include "Config.hpp"
+#include "Server.hpp"
+//#include "Signal.hpp"
 
 int main(int argc, char **argv) {
     const char* configFilePath = "./webserv.conf";
+
+    //std::cout << "SIGNAL: " << signal.getSignal(); << std::endl;
+    //signal.setSignal(false);
+
     if (argc > 2) {
         exit(EXIT_FAILURE);
     } else if (argc != 1) {
@@ -30,4 +35,5 @@ int main(int argc, char **argv) {
         ["fastcgi_pass"] << std::endl;
 
     ft::Server server(config);
+    server.run();
 }
