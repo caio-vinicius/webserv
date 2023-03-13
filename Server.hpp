@@ -4,29 +4,27 @@
 #ifndef SERVER_HPP_
 #define SERVER_HPP_
 
-#include <vector>
-#include "Config.hpp"
 #include <poll.h>
 #include <arpa/inet.h>
+#include <vector>
+#include "./Config.hpp"
 
 namespace ft {
 
 class Server {
  public:
     Server(void);
-    Server(Config config);
+    explicit Server(Config config);
     virtual ~Server();
     void run();
-    int getPort();
 
  private:
     Config _config;
     std::vector<int> _sockets;
     std::vector<struct pollfd> _pollfds;
     std::vector<struct sockaddr_in> _sockaddrs;
+};  // class Server
 
-}; // class Server
+}  // namespace ft
 
-} // namespace ft
-
-#endif
+#endif  // SERVER_HPP_
