@@ -19,6 +19,9 @@
 #include <iterator>
 #include <sstream>
 #include <string>
+#include <fstream>
+
+bool ft::quit = false;
 
 int strToInt(std::string str) {
     int num;
@@ -100,56 +103,128 @@ ft::Server::~Server() {
     std::cout << "Server destroyed" << std::endl;
 }
 
-bool quit = false;
+std::map<std::string, std::string> ft::Server::loadHeader(char *buffer) {
+    std::map<std::string, std::string> header;
+    std::string line;
+    std::string str(buffer);
+    std::istringstream ss(str);
+    std::string key;
+    std::string value;
 
-void handle_signal(int) {
-    quit = true;
+    std::getline(ss, line);
+    header["Request-Line"] = line;
+
+    while (std::getline(ss, line)) {
+        if (line.empty()) {
+            break;
+        }
+        key = line.substr(0, line.find(":"));
+        value = line.substr(line.find(":") + 2);
+        header[key] = value;
+    }
+    return (header);
 }
 
-void ft::Server::run() {
-    int ret;
-    int client_fd;
-    char    buffer[1024];
-    size_t i = 0;
+void ft::Server::loadBody(char *buffer) {
+    std::string str(buffer);
+    std::istringstream ss(str);
+    std::string line;
 
-    struct sigaction sa;
-    memset(&sa, 0, sizeof(sa));
-    sa.sa_handler = handle_signal;
-    sigaction(SIGINT, &sa, NULL);
-    while (true) {
-        ret = poll(&this->_pollfds[0], this->_config.server.size(), -1);
-        if (ret == -1) {
-            std::cout << "Error" << std::endl;
-        } else if (ret == 0) {
-            std::cout << "Timeout" << std::endl;
-        }
-        socklen_t clilen;
-        i = 0;
-        while (i < this->_config.server.size()) {
-            if (this->_pollfds[i].revents & POLLIN) {
-                std::cout << "POLLIN" << " " << i << std::endl;
-                clilen = sizeof(this->_sockaddrs[i]);
-                client_fd = accept(this->_sockets[i], \
-                    (struct sockaddr *)&this->_sockaddrs[i], &clilen);
-                if (client_fd < 0) {
-                    perror("Erro ao aceitar o cliente");
-                    exit(1);
-                } else {
-                    std::cout << "Cliente conectado" << std::endl;
-                    if (recv(client_fd, buffer, sizeof(buffer), 0) < 0) {
-                        perror("Erro ao receber a mensagem");
-                        exit(1);
-                    }
-                    send(client_fd, buffer, sizeof(buffer), 0);
-                    std::cout << "Mensagem recebida: " << buffer << std::endl;
-                    close(client_fd);
-                }
-            }
-            i++;
-        }
-        if (quit) {
-            std::cout << "quit" << std::endl;
+    while (std::getline(ss, line)) {
+        if (line.empty()) {
             break;
         }
     }
+}
+
+char *ft::Server::buildResponse(void) {
+    std::string status_line = "HTTP/1.1 200 OK\n";
+    std::string content_type = "Content-Type: text/html\n";
+    std::string content_length = "Content-Length: 12\n";
+    std::string body = "\n\nHello World!";
+    std::string response = status_line + content_type + content_length + body;
+    return (response.c_str());
+}
+
+void ft::Server::handleConnection(int client_fd) {
+    int ret;
+    char buffer[8192];  // 8K buffer
+    std::map<std::string, std::string> header;
+
+    if (client_fd < 0) {
+        perror("Erro ao aceitar o cliente");
+        exit(1);
+    } else {
+        std::cout << "Cliente conectado" << std::endl;
+        ret = recv(client_fd, buffer, sizeof(buffer), 0);
+        if (ret < 0) {
+            perror("Erro ao receber a mensagem");
+            exit(1);
+        }
+        std::cout << "Mensagem recebida: " << buffer << std::endl;
+        buffer[ret] = '\0';
+        header = loadHeader(buffer);
+        if (header["Request-Line"].find("GET") != std::string::npos) {
+            std::cout << "GET" << std::endl;
+        } else if (header["Request-Line"].find("POST") != std::string::npos) {
+            std::cout << "POST" << std::endl;
+            loadBody(buffer);
+            // if (header["Content-Length"] == "0") {
+        } else if (header["Request-Line"].find("DELETE") != std::string::npos) {
+            std::cout << "DELETE" << std::endl;
+        } else {
+            std::cout << "Method not allowed" << std::endl;
+        }
+        const char *response;
+        response = buildResponse();
+        send(client_fd, response, strlen(response), 0);
+        close(client_fd);
+    }
+}
+
+ft::Server::client_fd ft::Server::waitConnections() {
+    int ret;
+    int client_fd;
+    size_t i = 0;
+    socklen_t clilen;
+
+    ret = poll(&this->_pollfds[0], this->_config.server.size(), -1);
+    if (ret == -1) {
+        std::cout << "Error" << std::endl;
+    } else if (ret == 0) {
+        std::cout << "Timeout" << std::endl;
+    }
+    while (i < this->_config.server.size()) {
+        if (this->_pollfds[i].revents & POLLIN) {
+            std::cout << "POLLIN" << " " << i << std::endl;
+            clilen = sizeof(this->_sockaddrs[i]);
+            client_fd = accept(this->_sockets[i], \
+                (struct sockaddr *)&this->_sockaddrs[i], &clilen);
+            return (client_fd);
+        }
+        i++;
+    }
+    return (0);
+}
+
+
+void handle_signal(int) {
+    ft::quit = true;
+}
+
+void ft::Server::run() {
+    int client_fd;
+    struct sigaction sa;
+
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = handle_signal;
+    sigaction(SIGINT, &sa, NULL);
+
+    while (!ft::quit) {
+        client_fd = this->waitConnections();
+        if (client_fd > 0) {
+            this->handleConnection(client_fd);
+        }
+    }
+    std::cout << "Server stopped" << std::endl;
 }
