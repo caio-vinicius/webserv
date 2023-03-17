@@ -29,7 +29,7 @@ class Server {
     client_fd waitConnections(void);
     std::map<std::string, std::string> loadHeader(char *buffer);
     void loadBody(char *buffer);
-    char *buildResponse(void);
+    std::string buildResponse(std::string code, std::string phrase);
 
     Config _config;
     std::vector<int> _sockets;

@@ -23,6 +23,18 @@
 
 bool ft::quit = false;
 
+std::vector<string> mysplit(std::string str, char separator) {
+    std::string line;
+    std::vector<string> vec;
+    while (str.find(separator) != std::string::npos) {
+        line = str.substr(0, str.find(separator));
+        vec.push_back(line);
+        str = str.c_str() +  str.find(separator) + 1;
+    }
+    vec.push_back(str);
+    return (vec);
+}
+
 int strToInt(std::string str) {
     int num;
 
@@ -103,6 +115,20 @@ ft::Server::~Server() {
     std::cout << "Server destroyed" << std::endl;
 }
 
+void requestLine(std::istringstream &ss,
+    std::map<std::string, std::string> &header) {
+    std::string reqLine;
+    std::string line;
+
+    std::getline(ss, reqLine);
+    header["Request-Line"] = reqLine;
+
+    std::vector<string> vec = mysplit(reqLine,  ' ');
+    header["Method"] = vec[0];
+    header["uri"] = vec[1];
+    header["version"] = vec[2];
+}
+
 std::map<std::string, std::string> ft::Server::loadHeader(char *buffer) {
     std::map<std::string, std::string> header;
     std::string line;
@@ -111,9 +137,7 @@ std::map<std::string, std::string> ft::Server::loadHeader(char *buffer) {
     std::string key;
     std::string value;
 
-    std::getline(ss, line);
-    header["Request-Line"] = line;
-
+    requestLine(ss, header);
     while (std::getline(ss, line)) {
         if (line.empty()) {
             break;
@@ -136,14 +160,12 @@ void ft::Server::loadBody(char *buffer) {
         }
     }
 }
-
-char *ft::Server::buildResponse(void) {
-    std::string status_line = "HTTP/1.1 200 OK\n";
+std::string ft::Server::buildResponse(std::string code, std::string phrase) {
+    std::string status_line = "HTTP/1.1 " + code + " " + phrase + "\n";
     std::string content_type = "Content-Type: text/html\n";
     std::string content_length = "Content-Length: 12\n";
     std::string body = "\n\nHello World!";
-    std::string response = status_line + content_type + content_length + body;
-    return (response.c_str());
+    return (status_line + content_type + content_length + body);
 }
 
 void ft::Server::handleConnection(int client_fd) {
@@ -164,20 +186,19 @@ void ft::Server::handleConnection(int client_fd) {
         std::cout << "Mensagem recebida: " << buffer << std::endl;
         buffer[ret] = '\0';
         header = loadHeader(buffer);
-        if (header["Request-Line"].find("GET") != std::string::npos) {
+        if (!header["Method"].compare("GET")) {
             std::cout << "GET" << std::endl;
-        } else if (header["Request-Line"].find("POST") != std::string::npos) {
+        } else if (!header["Method"].compare("POST")) {
             std::cout << "POST" << std::endl;
             loadBody(buffer);
-            // if (header["Content-Length"] == "0") {
-        } else if (header["Request-Line"].find("DELETE") != std::string::npos) {
+        } else if (!header["Method"].compare("DELETE")) {
             std::cout << "DELETE" << std::endl;
         } else {
             std::cout << "Method not allowed" << std::endl;
         }
-        const char *response;
-        response = buildResponse();
-        send(client_fd, response, strlen(response), 0);
+        std::string response;
+        response = buildResponse("200", "I'm not fine");
+        send(client_fd, response.c_str(), response.size(), 0);
         close(client_fd);
     }
 }
