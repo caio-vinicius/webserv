@@ -2,6 +2,7 @@
 /* All rights reserved. 42 */
 
 #include "./Server.hpp"
+#include "./Method.hpp"
 
 #include <errno.h>
 #include <arpa/inet.h>
@@ -186,18 +187,13 @@ void ft::Server::handleConnection(int client_fd) {
         std::cout << "Mensagem recebida: " << buffer << std::endl;
         buffer[ret] = '\0';
         header = loadHeader(buffer);
-        if (!header["Method"].compare("GET")) {
-            std::cout << "GET" << std::endl;
-        } else if (!header["Method"].compare("POST")) {
-            std::cout << "POST" << std::endl;
-            loadBody(buffer);
-        } else if (!header["Method"].compare("DELETE")) {
-            std::cout << "DELETE" << std::endl;
-        } else {
-            std::cout << "Method not allowed" << std::endl;
-        }
+
+        Method *req = Method.getRequest(header(["Method"]));
+        std::string res = req.buildResponse(header);
+        send(socket, res, res.size());
+
         std::string response;
-        response = buildResponse("200", "I'm not fine");
+        response = buildResponse("200", "I'm not fine"); // lenzo did it
         send(client_fd, response.c_str(), response.size(), 0);
         close(client_fd);
     }
