@@ -1,14 +1,16 @@
 /* Copyright (c) 2023 Caio Souza, Guilherme Martinelli, Luigi Ferrari. */
 /* All rights reserved. 42 */
 
+#include <poll.h>
+
 #include <iostream>
 #include <string>
 #include <cstdlib>
 #include <fstream>
 #include <sstream>
+
 #include "./Config.hpp"
-#include "Utils.hpp"
-#include <poll.h>
+#include "./Utils.hpp"
 
 
 ft::Config::Config(std::string const filename) : _filename(filename) {

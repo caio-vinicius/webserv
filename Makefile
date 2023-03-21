@@ -2,7 +2,7 @@ NAME = webserv
 
 all: $(NAME)
 
-SRCS = main.cpp Utils.cpp Config.cpp Server.cpp
+SRCS = main.cpp Utils.cpp Config.cpp Server.cpp Method.cpp
 
 CFLAGS := -Wall -Wextra -Wfatal-errors -std=c++98 -pedantic -pedantic-errors
 

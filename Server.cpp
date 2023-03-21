@@ -1,9 +1,6 @@
 /* Copyright (c) 2023 Caio Souza, Guilherme Martinelli, Luigi Ferrari. */
 /* All rights reserved. 42 */
 
-#include "./Server.hpp"
-#include "./Method.hpp"
-
 #include <errno.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -21,6 +18,9 @@
 #include <sstream>
 #include <string>
 #include <fstream>
+
+#include "./Server.hpp"
+#include "./Method.hpp"
 
 bool ft::quit = false;
 
@@ -117,17 +117,16 @@ ft::Server::~Server() {
 }
 
 void requestLine(std::istringstream &ss,
-    std::map<std::string, std::string> &header) {
+    std::map<std::string, std::string> *header) {
     std::string reqLine;
     std::string line;
 
     std::getline(ss, reqLine);
-    header["Request-Line"] = reqLine;
 
     std::vector<string> vec = mysplit(reqLine,  ' ');
-    header["Method"] = vec[0];
-    header["uri"] = vec[1];
-    header["version"] = vec[2];
+    (*header)["Method"] = vec[0];
+    (*header)["Uri"] = vec[1];
+    (*header)["Version"] = vec[2];
 }
 
 std::map<std::string, std::string> ft::Server::loadHeader(char *buffer) {
@@ -138,7 +137,7 @@ std::map<std::string, std::string> ft::Server::loadHeader(char *buffer) {
     std::string key;
     std::string value;
 
-    requestLine(ss, header);
+    requestLine(ss, &header);
     while (std::getline(ss, line)) {
         if (line.empty()) {
             break;
@@ -161,6 +160,7 @@ void ft::Server::loadBody(char *buffer) {
         }
     }
 }
+
 std::string ft::Server::buildResponse(std::string code, std::string phrase) {
     std::string status_line = "HTTP/1.1 " + code + " " + phrase + "\n";
     std::string content_type = "Content-Type: text/html\n";
@@ -188,13 +188,9 @@ void ft::Server::handleConnection(int client_fd) {
         buffer[ret] = '\0';
         header = loadHeader(buffer);
 
-        Method *req = Method.getRequest(header(["Method"]));
-        std::string res = req.buildResponse(header);
-        send(socket, res, res.size());
-
-        std::string response;
-        response = buildResponse("200", "I'm not fine"); // lenzo did it
-        send(client_fd, response.c_str(), response.size(), 0);
+        Method *req = ft::Method::getRequest(header["Method"]);
+        std::string res = req->buildResponse(header);
+        send(client_fd, res.c_str(), res.size(), 0);
         close(client_fd);
     }
 }

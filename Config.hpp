@@ -12,7 +12,6 @@ namespace ft {
 
 class Config {
  public:
-
     class Location {
      public:
         Location(void) {}
@@ -28,7 +27,7 @@ class Config {
         }
 
         std::map<string, string> params;
-    }; // class Location
+    };  // class Location
 
     class Server {
      public:
@@ -48,7 +47,7 @@ class Config {
 
         std::map<string, string> params;
         std::map<string, Location> location;
-    }; // class Server
+    };  // class Server
 
     std::map<string, string> params;
     std::map<string, Server> server;

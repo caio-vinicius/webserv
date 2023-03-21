@@ -2,18 +2,19 @@
 /* All rights reserved. 42 */
 
 #include <stdlib.h>
+
 #include <iostream>
 #include <csignal>
 #include <cstring>
-#include "Config.hpp"
-#include "Server.hpp"
-//#include "Signal.hpp"
+
+#include "./Config.hpp"
+#include "./Server.hpp"
 
 int main(int argc, char **argv) {
     const char* configFilePath = "./webserv.conf";
 
-    //std::cout << "SIGNAL: " << signal.getSignal(); << std::endl;
-    //signal.setSignal(false);
+    //  std::cout << "SIGNAL: " << signal.getSignal(); << std::endl;
+    //  signal.setSignal(false);
 
     if (argc > 2) {
         exit(EXIT_FAILURE);
