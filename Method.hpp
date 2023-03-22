@@ -8,12 +8,14 @@
 #include <map>
 #include <iostream>
 
+#include "./Response.hpp"
+
 namespace ft {
 class Method {
  public:
     Method() {}
     static Method *getRequest(std::string method);
-    virtual std::string buildResponse(std::map<std::string,
+    virtual ft::Response buildResponse(std::map<std::string,
         std::string> header) = 0;
     ~Method() {}
 };
@@ -21,33 +23,24 @@ class Method {
 class Get : public Method {
  public:
     Get() {}
-    std::string buildResponse(std::map<std::string, std::string> header) {
-        std::string response;
-        std::cout << "GET" << std::endl;
-        return  ("HTTP/1.1 200 OK\n\n");
-    }
+    ft::Response buildResponse(std::map<std::string, std::string> header);
     ~Get() {}
 };
+
 class Post : public Method {
  public:
     Post() {}
-    std::string buildResponse(std::map<std::string, std::string> header) {
-        std::string response;
-        std::cout << "POST" << std::endl;
-        return ("HTTP/1.1 200 OK\n\n");
-    }
+    ft::Response buildResponse(std::map<std::string, std::string> header) {}
     ~Post() {}
 };
+
 class Delete : public Method {
  public:
     Delete() {}
-    std::string buildResponse(std::map<std::string, std::string> header) {
-        std::string response;
-        std::cout << "DELETE" << std::endl;
-        return  ("HTTP/1.1 200 OK\n\n");
-    }
+    ft::Response buildResponse(std::map<std::string, std::string> header) {}
     ~Delete() {}
 };
+
 }  // namespace ft
 
 #endif  // METHOD_HPP_

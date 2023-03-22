@@ -13,3 +13,10 @@ ft::Method *ft::Method::getRequest(std::string method) {
         return new Delete();
     return NULL;
 }
+
+ft::Response ft::Get::buildResponse(std::map<std::string, std::string> header) {
+    if (header.find("Host") == header.end()) {
+        return Response("400", "Bad Request", "HTTP/1.1", "", "");
+    }
+    return Response("200", "OK", "HTTP/1.1", "", "");
+}

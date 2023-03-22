@@ -21,6 +21,7 @@
 
 #include "./Server.hpp"
 #include "./Method.hpp"
+#include "./Response.hpp"
 
 bool ft::quit = false;
 
@@ -161,14 +162,6 @@ void ft::Server::loadBody(char *buffer) {
     }
 }
 
-std::string ft::Server::buildResponse(std::string code, std::string phrase) {
-    std::string status_line = "HTTP/1.1 " + code + " " + phrase + "\n";
-    std::string content_type = "Content-Type: text/html\n";
-    std::string content_length = "Content-Length: 12\n";
-    std::string body = "\n\nHello World!";
-    return (status_line + content_type + content_length + body);
-}
-
 void ft::Server::handleConnection(int client_fd) {
     int ret;
     char buffer[8192];  // 8K buffer
@@ -189,8 +182,8 @@ void ft::Server::handleConnection(int client_fd) {
         header = loadHeader(buffer);
 
         Method *req = ft::Method::getRequest(header["Method"]);
-        std::string res = req->buildResponse(header);
-        send(client_fd, res.c_str(), res.size(), 0);
+        ft::Response res = req->buildResponse(header);
+        send(client_fd, res.message().c_str(), res.message().size(), 0);
         close(client_fd);
     }
 }
