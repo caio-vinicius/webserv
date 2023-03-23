@@ -30,14 +30,14 @@ class Get : public Method {
 class Post : public Method {
  public:
     Post() {}
-    ft::Response buildResponse(std::map<std::string, std::string> header) {}
+    ft::Response buildResponse(std::map<std::string, std::string> header);
     ~Post() {}
 };
 
 class Delete : public Method {
  public:
     Delete() {}
-    ft::Response buildResponse(std::map<std::string, std::string> header) {}
+    ft::Response buildResponse(std::map<std::string, std::string> header);
     ~Delete() {}
 };
 

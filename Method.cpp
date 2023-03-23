@@ -20,3 +20,21 @@ ft::Response ft::Get::buildResponse(std::map<std::string, std::string> header) {
     }
     return Response("200", "OK", "HTTP/1.1", "", "");
 }
+
+ft::Response ft::Post::buildResponse(
+    std::map<std::string, std::string> header) {
+    if (!header.count("Host")) {
+        return Response("400", "Bad Request", "HTTP/1.1", "", "");
+    } else if (!header.count("Content-Length")) {
+        return Response("411", "Length Required", "HTTP/1.1", "", "");
+    }
+    return Response("201", "Created", "HTTP/1.1", "", "");
+}
+
+ft::Response ft::Delete::buildResponse(
+    std::map<std::string, std::string> header) {
+    if (!header.count("Host")) {
+        return Response("400", "Bad Request", "HTTP/1.1", "", "");
+    }
+    return Response("202", "Accepted", "HTTP/1.1", "", "");
+}
