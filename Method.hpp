@@ -9,35 +9,43 @@
 #include <iostream>
 
 #include "./Response.hpp"
+#include "./Config.hpp"
 
 namespace ft {
 class Method {
  public:
     Method() {}
     static Method *getRequest(std::string method);
-    virtual ft::Response buildResponse(std::map<std::string,
-        std::string> header) = 0;
+    virtual ft::Response buildResponse(
+        std::map<std::string, std::string> header,
+        ft::Config *config) = 0;
     ~Method() {}
 };
 
 class Get : public Method {
  public:
     Get() {}
-    ft::Response buildResponse(std::map<std::string, std::string> header);
+    ft::Response buildResponse(
+        std::map<std::string, std::string> header,
+        ft::Config *config);
     ~Get() {}
 };
 
 class Post : public Method {
  public:
     Post() {}
-    ft::Response buildResponse(std::map<std::string, std::string> header);
+    ft::Response buildResponse(
+        std::map<std::string, std::string> header,
+        ft::Config *config);
     ~Post() {}
 };
 
 class Delete : public Method {
  public:
     Delete() {}
-    ft::Response buildResponse(std::map<std::string, std::string> header);
+    ft::Response buildResponse(
+        std::map<std::string, std::string> header,
+        ft::Config *config);
     ~Delete() {}
 };
 

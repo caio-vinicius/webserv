@@ -182,7 +182,7 @@ void ft::Server::handleConnection(int client_fd) {
         header = loadHeader(buffer);
 
         Method *req = ft::Method::getRequest(header["Method"]);
-        ft::Response res = req->buildResponse(header);
+        ft::Response res = req->buildResponse(header, &this->_config);
         send(client_fd, res.message().c_str(), res.message().size(), 0);
         close(client_fd);
     }

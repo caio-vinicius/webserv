@@ -34,6 +34,8 @@ int main(int argc, char **argv) {
         ["return"] << std::endl;
     std::cout << config.server["localhost:8080"].location["/test"].params\
         ["fastcgi_pass"] << std::endl;
+    std::cout << config.params["root"] << std::endl;
+    std::cout << config.server["localhost:8080"].params["root"] << std::endl;
 
     ft::Server server(config);
     server.run();

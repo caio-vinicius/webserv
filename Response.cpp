@@ -27,5 +27,3 @@ ft::Response::~Response() {}
 std::string ft::Response::message() {
     return (this->_message);
 }
-
-
