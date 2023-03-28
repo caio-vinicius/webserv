@@ -145,6 +145,7 @@ std::map<std::string, std::string> ft::Server::loadHeader(char *buffer) {
         }
         key = line.substr(0, line.find(":"));
         value = line.substr(line.find(":") + 2);
+        value = remove_chr(value, 13);
         header[key] = value;
     }
     return (header);
@@ -171,13 +172,12 @@ void ft::Server::handleConnection(int client_fd) {
         perror("Erro ao aceitar o cliente");
         exit(1);
     } else {
-        std::cout << "Cliente conectado" << std::endl;
         ret = recv(client_fd, buffer, sizeof(buffer), 0);
         if (ret < 0) {
             perror("Erro ao receber a mensagem");
             exit(1);
         }
-        std::cout << "Mensagem recebida: " << buffer << std::endl;
+        std::cout << buffer << std::endl;
         buffer[ret] = '\0';
         header = loadHeader(buffer);
 
@@ -202,7 +202,6 @@ ft::Server::client_fd ft::Server::waitConnections() {
     }
     while (i < this->_config.server.size()) {
         if (this->_pollfds[i].revents & POLLIN) {
-            std::cout << "POLLIN" << " " << i << std::endl;
             clilen = sizeof(this->_sockaddrs[i]);
             client_fd = accept(this->_sockets[i], \
                 (struct sockaddr *)&this->_sockaddrs[i], &clilen);

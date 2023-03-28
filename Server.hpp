@@ -10,6 +10,7 @@
 #include <map>
 #include <string>
 #include "./Config.hpp"
+#include "./Utils.hpp"
 
 namespace ft {
 
