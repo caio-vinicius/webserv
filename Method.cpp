@@ -7,6 +7,9 @@
 
 #include "./Method.hpp"
 
+#define DEF_PATH "./www"
+#define DEF_INDEX "index.html"
+
 ft::Method *ft::Method::getRequest(std::string method) {
     if (!method.compare("GET"))
         return new Get();
@@ -17,11 +20,22 @@ ft::Method *ft::Method::getRequest(std::string method) {
     return NULL;
 }
 
+std::string getPath(ft::Config::Server *server, ft::Config::Location *location,
+    std::string param, std::string def) {
+    std::string str;
+    if (location->params.count(param))
+        return location->params[param];
+    else if (server->params.count(param))
+        return server->params[param];
+    return def;
+}
+
 std::string openAndReadFile(std::string filename) {
     std::ifstream file(filename.c_str());
     std::stringstream buffer;
 
     buffer << file.rdbuf();
+    file.close();
     return buffer.str();
 }
 
@@ -61,8 +75,9 @@ ft::Config::Location  *getLocation(std::map<std::string, std::string> header,
 ft::Response ft::Get::buildResponse(
     std::map<std::string, std::string> header,
     ft::Config *config) {
-    ft::Config::Server *server;
+    ft::Config::Server      *server;
     ft::Config::Location    *location;
+    std::string root, file, path;
 
     server = getHost(header, config);
     if (!server)
@@ -72,7 +87,17 @@ ft::Response ft::Get::buildResponse(
     if (!location)
         return Response("404", "Not Found", "HTTP/1.1", "", "");
 
-    return Response("200", "OK", "HTTP/1.1", "", "");
+    root = getPath(server, location, "root", DEF_PATH);
+    file = getPath(server, location, "index", DEF_INDEX);
+
+    if (!header["Uri"].compare("/")) {
+        path = root + header["Uri"] + file;
+    } else {
+        path = root + header["Uri"] + "/" + file;
+    }
+
+    return Response("200", "OK", "HTTP/1.1", "",
+        openAndReadFile(path).c_str());
 }
 
 ft::Response ft::Post::buildResponse(

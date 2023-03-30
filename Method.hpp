@@ -18,7 +18,7 @@ class Method {
     static Method *getRequest(std::string method);
     virtual ft::Response buildResponse(
         std::map<std::string, std::string> header,
-        ft::Config *config) = 0;
+        ft::Config  *config) = 0;
     ~Method() {}
 };
 
