@@ -20,13 +20,13 @@ ft::Method *ft::Method::getRequest(std::string method) {
     return NULL;
 }
 
-std::string getPath(ft::Config::Server *server, ft::Config::Location *location,
-    std::string param, std::string def) {
+std::string getPath(const ft::Config::Server &server,
+    const ft::Config::Location &location, std::string param, std::string def) {
     std::string str;
-    if (location->params.count(param))
-        return location->params[param];
-    else if (server->params.count(param))
-        return server->params[param];
+    if (location.params.count(param))
+        return location.params.at(param);
+    else if (server.params.count(param))
+        return server.params.at(param);
     return def;
 }
 
@@ -39,17 +39,30 @@ std::string openAndReadFile(std::string filename) {
     return buffer.str();
 }
 
-ft::Config::Server  *getHost(std::map<std::string, std::string> header,
-    ft::Config *config) {
-    std::map<std::string, ft::Config::Server>::iterator it_server;
+std::string buildHeader(const std::string &buffer) {
+    std::string         header;
+    std::stringstream   ss;
+
+    ss << buffer.length();
+    header += "Content-Lenght: " + ss.str() + "\r\n";
+    header += "Content-Type: text/html\r\n";
+    // Do other stuff
+    std::cout << header << "_____________________" << std::endl;
+    return header;
+}
+
+ft::Config::Server const  *getHost(
+    const std::map<std::string, std::string> &header,
+    const ft::Config &config) {
+    std::map<std::string, ft::Config::Server>::const_iterator it_server;
     std::string host;
 
     if (header.find("Host") == header.end()) {
         return NULL;
     }
-    host = header["Host"];
-    it_server = config->server.begin();
-    for (; it_server != config->server.end(); it_server++) {
+    host = header.at("Host");
+    it_server = config.server.begin();
+    for (; it_server != config.server.end(); it_server++) {
         if (!it_server->first.compare(host)) {
             return &it_server->second;
         }
@@ -57,14 +70,15 @@ ft::Config::Server  *getHost(std::map<std::string, std::string> header,
     return NULL;
 }
 
-ft::Config::Location  *getLocation(std::map<std::string, std::string> header,
-    ft::Config::Server *server) {
-    std::map<std::string, ft::Config::Location>::iterator it_location;
+ft::Config::Location const *getLocation(
+    const std::map<std::string, std::string> &header,
+    const ft::Config::Server &server) {
+    std::map<std::string, ft::Config::Location>::const_iterator it_location;
     std::string location;
 
-    location = header["Uri"];
-    it_location = server->location.begin();
-    for (; it_location != server->location.end(); it_location++) {
+    location = header.at("Uri");
+    it_location = server.location.begin();
+    for (; it_location != server.location.end(); it_location++) {
         if (!it_location->first.compare(location)) {
             return &it_location->second;
         }
@@ -73,36 +87,39 @@ ft::Config::Location  *getLocation(std::map<std::string, std::string> header,
 }
 
 ft::Response ft::Get::buildResponse(
-    std::map<std::string, std::string> header,
-    ft::Config *config) {
-    ft::Config::Server      *server;
-    ft::Config::Location    *location;
-    std::string root, file, path;
+    const std::map<std::string, std::string> &header,
+    const ft::Config &config) {
+    ft::Config::Server const      *server;
+    ft::Config::Location const    *location;
+    std::string root, file, path, responseHeader, buffer;
 
     server = getHost(header, config);
     if (!server)
         return Response("400", "Bad Request", "HTTP/1.1", "", "");
 
-    location = getLocation(header, server);
+    location = getLocation(header, *server);
     if (!location)
         return Response("404", "Not Found", "HTTP/1.1", "", "");
 
-    root = getPath(server, location, "root", DEF_PATH);
-    file = getPath(server, location, "index", DEF_INDEX);
+    root = getPath(*server, *location, "root", DEF_PATH);
+    file = getPath(*server, *location, "index", DEF_INDEX);
 
-    if (!header["Uri"].compare("/")) {
-        path = root + header["Uri"] + file;
+    if (!header.at("Uri").compare("/")) {
+        path = root + header.at("Uri") + file;
     } else {
-        path = root + header["Uri"] + "/" + file;
+        path = root + header.at("Uri") + "/" + file;
     }
 
-    return Response("200", "OK", "HTTP/1.1", "",
-        openAndReadFile(path).c_str());
+    buffer = openAndReadFile(path);
+    responseHeader = buildHeader(buffer);
+
+    return Response("200", "OK", "HTTP/1.1", responseHeader,
+        buffer.c_str());
 }
 
 ft::Response ft::Post::buildResponse(
-    std::map<std::string, std::string> header,
-    ft::Config *config) {
+    const std::map<std::string, std::string> &header,
+    const ft::Config &config) {
     if (!header.count("Host")) {
         return Response("400", "Bad Request", "HTTP/1.1", "", "");
     } else if (!header.count("Content-Length")) {
@@ -113,8 +130,8 @@ ft::Response ft::Post::buildResponse(
 }
 
 ft::Response ft::Delete::buildResponse(
-    std::map<std::string, std::string> header,
-    ft::Config *config) {
+    const std::map<std::string, std::string> &header,
+    const ft::Config &config) {
     if (!header.count("Host")) {
         return Response("400", "Bad Request", "HTTP/1.1", "", "");
     }

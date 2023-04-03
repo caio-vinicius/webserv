@@ -55,14 +55,14 @@ ft::Server::Server(Config config): _config(config) {
     int sockfd;
     int opt;
 
-    std::cout << "Server created" << std::endl;
+    std::cout << "Server created" << std::endl << std::endl;
 
     this->_sockets.reserve(this->_config.server.size());
     this->_pollfds.reserve(this->_config.server.size());
     this->_sockaddrs.reserve(this->_config.server.size());
 
-    it_servers = config.server.begin();
-    for (; it_servers != config.server.end(); it_servers++) {
+    it_servers = this->_config.server.begin();
+    for (; it_servers != this->_config.server.end(); it_servers++) {
         sockfd = socket(AF_INET, SOCK_STREAM, 0);
         if (sockfd < 0) {
             std::cout << "Error opening socket" << std::endl;
@@ -88,12 +88,10 @@ ft::Server::Server(Config config): _config(config) {
             perror("Erro ao ligar o listen");
             exit(1);
         }
-        std::cout << "Server listening on port " << \
+        std::cout << "Server listening on " << \
+            it_servers->second.params["bind"];
+        std::cout << ":" << \
             it_servers->second.params["port"] << std::endl;
-        std::cout << "Server listening on bind " << \
-            it_servers->second.params["bind"] << std::endl;
-        std::cout << "Server fd is " << sockfd << std::endl;
-        std::cout << "----------------------------------------" << std::endl;
         this->_sockaddrs.push_back(serv_addr);
         this->_sockets.push_back(sockfd);
     }
@@ -104,7 +102,6 @@ ft::Server::Server(Config config): _config(config) {
         pollfd fd;
         fd.fd = *it_sockets;
         fd.events = POLLIN;
-        std::cout << "fd.fd: " << fd.fd << "" <<std::endl;
         this->_pollfds.push_back(fd);
     }
 }
@@ -172,17 +169,22 @@ void ft::Server::handleConnection(int client_fd) {
         perror("Erro ao aceitar o cliente");
         exit(1);
     } else {
+        std::cout << "Getting response" << std::endl;
         ret = recv(client_fd, buffer, sizeof(buffer), 0);
+        std::cout << "Response recovered" << std::endl;
         if (ret < 0) {
             perror("Erro ao receber a mensagem");
             exit(1);
         }
-        std::cout << buffer << std::endl;
+        if (ret == 0)
+            return;
         buffer[ret] = '\0';
         header = loadHeader(buffer);
 
+        std::cout << header["Uri"] << std::endl << std::endl;
+
         Method *req = ft::Method::getRequest(header["Method"]);
-        ft::Response res = req->buildResponse(header, &this->_config);
+        ft::Response res = req->buildResponse(header, this->_config);
         send(client_fd, res.message().c_str(), res.message().size(), 0);
         close(client_fd);
     }

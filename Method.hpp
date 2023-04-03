@@ -17,8 +17,8 @@ class Method {
     Method() {}
     static Method *getRequest(std::string method);
     virtual ft::Response buildResponse(
-        std::map<std::string, std::string> header,
-        ft::Config  *config) = 0;
+        const std::map<std::string, std::string> &header,
+        const ft::Config  &config) = 0;
     ~Method() {}
 };
 
@@ -26,8 +26,8 @@ class Get : public Method {
  public:
     Get() {}
     ft::Response buildResponse(
-        std::map<std::string, std::string> header,
-        ft::Config *config);
+        const std::map<std::string, std::string> &header,
+        const ft::Config &config);
     ~Get() {}
 };
 
@@ -35,8 +35,8 @@ class Post : public Method {
  public:
     Post() {}
     ft::Response buildResponse(
-        std::map<std::string, std::string> header,
-        ft::Config *config);
+        const std::map<std::string, std::string> &header,
+        const ft::Config &config);
     ~Post() {}
 };
 
@@ -44,8 +44,8 @@ class Delete : public Method {
  public:
     Delete() {}
     ft::Response buildResponse(
-        std::map<std::string, std::string> header,
-        ft::Config *config);
+        const std::map<std::string, std::string> &header,
+        const ft::Config &config);
     ~Delete() {}
 };
 
