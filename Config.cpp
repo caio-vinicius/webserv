@@ -111,3 +111,28 @@ void ft::Config::load(std::ifstream &configFile) {
     }
     return;
 }
+
+ft::Config::Server const *ft::Config::getServer(std::string const host) const {
+    std::map<std::string, ft::Config::Server>::const_iterator it_server;
+
+    it_server = this->server.begin();
+    for (; it_server != this->server.end(); it_server++) {
+        if (!it_server->first.compare(host)) {
+            return (&it_server->second);
+        }
+    }
+    return NULL;
+}
+
+ft::Config::Location const *ft::Config::getLocation(std::string uri,
+    const ft::Config::Server &server) const {
+    std::map<std::string, ft::Config::Location>::const_iterator it_location;
+
+    it_location = server.location.begin();
+    for (; it_location != server.location.end(); it_location++) {
+        if (!it_location->first.compare(uri)) {
+            return (&it_location->second);
+        }
+    }
+    return NULL;
+}

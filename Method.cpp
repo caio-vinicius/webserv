@@ -32,6 +32,8 @@ std::string getPath(const ft::Config::Server &server,
 
 std::string openAndReadFile(std::string filename) {
     std::ifstream file(filename.c_str());
+    if (!file.is_open())
+        return ("");
     std::stringstream buffer;
 
     buffer << file.rdbuf();
@@ -39,102 +41,87 @@ std::string openAndReadFile(std::string filename) {
     return buffer.str();
 }
 
-std::string buildHeader(const std::string &buffer) {
-    std::string         header;
+std::string buildHeader(const std::string &buffer, std::string path) {
+    std::string extension;
+    std::string header;
     std::stringstream   ss;
 
+    extension = path.substr(path.find_last_of(".") + 1);
+    std::map <std::string, std::string> mime_types;
+    mime_types["html"] = "text/html";
+    mime_types["css"] = "text/css";
+    mime_types["txt"] = "text/plain";
+    mime_types["csv"] = "text/csv";
+    mime_types["xml"] = "text/xml";
+    mime_types["jpg"] = "image/jpeg";
+    mime_types["jpeg"] = "image/jpeg";
+    mime_types["png"] = "image/png";
+    mime_types["gif"] = "image/gif";
+    mime_types["mp3"] = "audio/mpeg";
+    mime_types["mp4"] = "video/mp4";
+    if (mime_types.count(extension) == 0)
+        return "";
+
     ss << buffer.length();
+    header += "Server: 42webserv/1.0\r\n";
     header += "Content-Lenght: " + ss.str() + "\r\n";
-    header += "Content-Type: text/html\r\n";
+    header += "Content-Type: " + mime_types.at(extension) + "\r\n";
     // Do other stuff
     std::cout << header << "_____________________" << std::endl;
     return header;
 }
 
-ft::Config::Server const  *getHost(
-    const std::map<std::string, std::string> &header,
-    const ft::Config &config) {
-    std::map<std::string, ft::Config::Server>::const_iterator it_server;
-    std::string host;
-
-    if (header.find("Host") == header.end()) {
-        return NULL;
-    }
-    host = header.at("Host");
-    it_server = config.server.begin();
-    for (; it_server != config.server.end(); it_server++) {
-        if (!it_server->first.compare(host)) {
-            return &it_server->second;
-        }
-    }
-    return NULL;
-}
-
-ft::Config::Location const *getLocation(
-    const std::map<std::string, std::string> &header,
-    const ft::Config::Server &server) {
-    std::map<std::string, ft::Config::Location>::const_iterator it_location;
-    std::string location;
-
-    location = header.at("Uri");
-    it_location = server.location.begin();
-    for (; it_location != server.location.end(); it_location++) {
-        if (!it_location->first.compare(location)) {
-            return &it_location->second;
-        }
-    }
-    return NULL;
-}
-
 ft::Response ft::Get::buildResponse(
     const std::map<std::string, std::string> &header,
     const ft::Config &config) {
-    ft::Config::Server const      *server;
-    ft::Config::Location const    *location;
+    ft::Config::Server const *server;
+    ft::Config::Location const *location;
     std::string root, file, path, responseHeader, buffer;
 
-    server = getHost(header, config);
+    server = config.getServer(header.at("Host"));
     if (!server)
-        return Response("400", "Bad Request", "HTTP/1.1", "", "");
+        return Response(HTTP_STATUS_BAD_REQUEST, "", "");
 
-    location = getLocation(header, *server);
+    location = config.getLocation(header.at("Uri"), *server);
     if (!location)
-        return Response("404", "Not Found", "HTTP/1.1", "", "");
+        return Response(HTTP_STATUS_NOT_FOUND, "", "");
 
     root = getPath(*server, *location, "root", DEF_PATH);
     file = getPath(*server, *location, "index", DEF_INDEX);
+    file = getPath(*server, *location, "index", "x");
 
     if (!header.at("Uri").compare("/")) {
         path = root + header.at("Uri") + file;
     } else {
         path = root + header.at("Uri") + "/" + file;
     }
-
+    std::cout << "PATH: " << path << std::endl;
     buffer = openAndReadFile(path);
-    responseHeader = buildHeader(buffer);
+    responseHeader = buildHeader(buffer, path);
 
-    return Response("200", "OK", "HTTP/1.1", responseHeader,
-        buffer.c_str());
+    if (responseHeader.empty())
+        return Response(HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE, "", "");
+    return Response(HTTP_STATUS_OK, responseHeader, buffer);
 }
 
 ft::Response ft::Post::buildResponse(
     const std::map<std::string, std::string> &header,
     const ft::Config &config) {
     if (!header.count("Host")) {
-        return Response("400", "Bad Request", "HTTP/1.1", "", "");
+        return Response(HTTP_STATUS_BAD_REQUEST, "", "");
     } else if (!header.count("Content-Length")) {
-        return Response("411", "Length Required", "HTTP/1.1", "", "");
+        return Response(HTTP_STATUS_LENGTH_REQUIRED, "", "");
     }
     (void)config;
-    return Response("201", "Created", "HTTP/1.1", "", "");
+    return Response(HTTP_STATUS_CREATED, "", "");
 }
 
 ft::Response ft::Delete::buildResponse(
     const std::map<std::string, std::string> &header,
     const ft::Config &config) {
     if (!header.count("Host")) {
-        return Response("400", "Bad Request", "HTTP/1.1", "", "");
+        return Response(HTTP_STATUS_BAD_REQUEST, "", "");
     }
     (void)config;
-    return Response("202", "Accepted", "HTTP/1.1", "", "");
+    return Response(HTTP_STATUS_ACCEPTED, "", "");
 }

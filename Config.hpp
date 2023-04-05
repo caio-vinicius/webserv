@@ -61,6 +61,9 @@ class Config {
     void httpContext(std::ifstream &configFile);
     Server serverContext(std::ifstream &configFile);
     Location locationContext(std::ifstream &configFile);
+    Server const *getServer(std::string const host) const;
+    Location const *getLocation(std::string uri,
+        const ft::Config::Server &server) const;
 };  // class Config
 
 }  // namespace ft

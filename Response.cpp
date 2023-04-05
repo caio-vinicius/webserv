@@ -3,22 +3,19 @@
 
 #include "./Response.hpp"
 
+#define CRLF "\r\n"
+
 ft::Response::Response(
-    std::string status_code,
-    std::string reason_phrase,
-    std::string version = "HTTP/1.1",
+    const char *status_code_reason_phrase,
     std::string header = "",
     std::string body = ""
-) : _status_code(status_code),
-    _reason_phrase(reason_phrase),
-    _version(version),
+) : _status_code_reason_phrase(status_code_reason_phrase),
     _header(header),
     _body(body) {
-    this->_status_line = this->_version + " " + \
-                        this->_status_code + " " + \
-                        this->_reason_phrase;
-    this->_message = this->_status_line + "\n" + \
-                        this->_header + "\n" + \
+    this->_status_line = std::string(HTTP_VERSION) + " " + \
+                        this->_status_code_reason_phrase;
+    this->_message = this->_status_line + CRLF + \
+                        this->_header + CRLF + \
                         this->_body;
 }
 
