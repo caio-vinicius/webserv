@@ -16,6 +16,8 @@ class Method {
  public:
     Method() {}
     static Method *getRequest(std::string method);
+    ft::Response prepareResponse(const std::map <std::string, \
+        std::string> &header);
     virtual ft::Response buildResponse(
         const std::map<std::string, std::string> &header,
         const ft::Config  &config) = 0;
@@ -47,6 +49,15 @@ class Delete : public Method {
         const std::map<std::string, std::string> &header,
         const ft::Config &config);
     ~Delete() {}
+};
+
+class MethodNotAllowed : public Method {
+ public:
+    MethodNotAllowed() {}
+    ft::Response buildResponse(
+        const std::map<std::string, std::string> &header,
+        const ft::Config &config);
+    ~MethodNotAllowed() {}
 };
 
 }  // namespace ft

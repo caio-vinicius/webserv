@@ -4,6 +4,7 @@
 #include "./Response.hpp"
 
 #define CRLF "\r\n"
+#define SP " "
 
 ft::Response::Response(
     const char *status_code_reason_phrase,
@@ -12,7 +13,7 @@ ft::Response::Response(
 ) : _status_code_reason_phrase(status_code_reason_phrase),
     _header(header),
     _body(body) {
-    this->_status_line = std::string(HTTP_VERSION) + " " + \
+    this->_status_line = std::string(HTTP_VERSION) + SP + \
                         this->_status_code_reason_phrase;
     this->_message = this->_status_line + CRLF + \
                         this->_header + CRLF + \

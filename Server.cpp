@@ -116,15 +116,16 @@ ft::Server::~Server() {
 
 void requestLine(std::istringstream &ss,
     std::map<std::string, std::string> *header) {
-    std::string reqLine;
+    std::string request_line;
     std::string line;
 
-    std::getline(ss, reqLine);
+    std::getline(ss, request_line);
 
-    std::vector<string> vec = mysplit(reqLine,  ' ');
-    (*header)["Method"] = vec[0];
-    (*header)["Uri"] = vec[1];
-    (*header)["Version"] = vec[2];
+    std::vector<string> vec = mysplit(request_line,  ' ');
+
+    (*header)["Method"] = vec.at(0);
+    (*header)["URI"] = vec.at(1);
+    (*header)["Version"] = vec.at(2);
 }
 
 std::map<std::string, std::string> ft::Server::loadHeader(char *buffer) {
@@ -171,6 +172,8 @@ void ft::Server::handleConnection(int client_fd) {
     } else {
         std::cout << "Getting response" << std::endl;
         ret = recv(client_fd, buffer, sizeof(buffer), 0);
+        std::cout << "ret: " << ret << std::endl;
+        std::cout << "buffer: " << buffer << std::endl;
         std::cout << "Response recovered" << std::endl;
         if (ret < 0) {
             perror("Erro ao receber a mensagem");

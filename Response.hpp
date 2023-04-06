@@ -8,6 +8,7 @@
 #include <string>
 
 #define HTTP_VERSION "HTTP/1.1"
+#define HTTP_STATUS_NULL "000"
 #define HTTP_STATUS_OK "200 OK"
 #define HTTP_STATUS_CREATED "201 Created"
 #define HTTP_STATUS_ACCEPTED "202 Accepted"
@@ -57,8 +58,9 @@ class Response {
         std::string statusCode(void);
         std::string header(void);
         std::string body(void);
- private:
+
         std::string _status_code_reason_phrase;
+ private:
         std::string _header;
         std::string _body;
         std::string _message;
