@@ -18,6 +18,7 @@ std::string toUpperUnderscore(std::string str) {
 
 ft::Cgi::Cgi(std::string const path,
              std::map<std::string, std::string> env) {
+    this->_path = path;
     this->createEnv();
 
     std::map<std::string, std::string>::iterator it = env.begin();
@@ -84,7 +85,7 @@ char **ft::Cgi::createArgv(void) {
     std::vector<std::string> argv;
 
     argv.push_back("python3");
-    argv.push_back("cgi.py");
+    argv.push_back(this->_path);
     return (vectorToChar(argv));
 }
 

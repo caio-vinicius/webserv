@@ -4,14 +4,15 @@
 #ifndef CGI_HPP_
 #define CGI_HPP_
 
+#include <unistd.h>
+#include <sys/wait.h>
+
 #include <iostream>
 #include <map>
 #include <string>
 #include <vector>
 #include <cstring>
 
-#include <unistd.h>
-#include <sys/wait.h>
 
 namespace ft {
 class Cgi {
