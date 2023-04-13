@@ -3,6 +3,34 @@
 
 #include "./Cgi.hpp"
 
+std::string toUpperUnderscore(std::string str) {
+    std::string result;
+
+    for (std::string::iterator it = str.begin(); it != str.end(); ++it) {
+        if (*it == '-') {
+            result += '_';
+        } else {
+            result += toupper(*it);
+        }
+    }
+    return (result);
+}
+
+ft::Cgi::Cgi(std::string const path,
+             std::map<std::string, std::string> env) {
+    this->createEnv();
+
+    std::map<std::string, std::string>::iterator it = env.begin();
+    std::map<std::string, std::string>::iterator ite = env.end();
+
+    while (it != ite) {
+        this->_env[toUpperUnderscore(it->first)] = it->second;
+        it++;
+    }
+}
+
+ft::Cgi::~Cgi(void) {}
+
 void ft::Cgi::createEnv(void) {
     this->_env["AUTH_TYPE"] = "";
     this->_env["CONTENT_LENGTH"] = "";
@@ -20,20 +48,22 @@ void ft::Cgi::createEnv(void) {
     this->_env["SERVER_NAME"] = "";
     this->_env["SERVER_PORT"] = "";
     this->_env["SERVER_PROTOCOL"] = "";
-    this->_env["SERVER_SOFTWARE"] = "Webserv/1.0";
+    this->_env["SERVER_SOFTWARE"] = "42webserv/1.0";
     this->_env["REDIRECT_STATUS"] = "200";
 }
 
 void ft::Cgi::createPipe(void) {
     if (pipe(this->_pipe_fd) == -1) {
-        throw ft::Cgi::PipeError();
+        // throw ft::Cgi::PipeError();
+        std::cout << "Pipe error" << std::endl;
     }
 }
 
 void ft::Cgi::createProcess(void) {
     this->_pid = fork();
     if (this->_pid == -1) {
-        throw ft::Cgi::ForkError();
+        // throw ft::Cgi::ForkError();
+        std::cout << "Fork error" << std::endl;
     }
 }
 
@@ -41,12 +71,21 @@ void ft::Cgi::closePipe(void) {
     close(this->_pipe_fd[0]);
 }
 
+char **vectorToChar(std::vector<std::string> &vec) {
+    char **ret = new char *[vec.size() + 1];
+    for (size_t i = 0; i < vec.size(); i++) {
+        ret[i] = strdup(vec[i].c_str());
+    }
+    ret[vec.size()] = NULL;
+    return (ret);
+}
+
 char **ft::Cgi::createArgv(void) {
     std::vector<std::string> argv;
 
-    argv.push_back(this->_path);
-    argv.push_back(NULL);
-    return (&argv[0]);
+    argv.push_back("python3");
+    argv.push_back("cgi.py");
+    return (vectorToChar(argv));
 }
 
 char **ft::Cgi::createEnvp(void) {
@@ -55,23 +94,25 @@ char **ft::Cgi::createEnvp(void) {
     std::vector<std::string> envp;
 
     while (it != ite) {
-        envp.push_back((it->first + "=" + it->second).c_str());
+        envp.push_back(reinterpret_cast<char *>((it->first + "=" + it->second).c_str()));
         it++;
     }
-    return (&envp[0]);
+    return (vectorToChar(envp));
 }
 
 void ft::Cgi::runChild(void) {
-    dup2(this->_pipe_fd[0], STDIN_FILENO);
+    dup2(this->_pipe_fd[1], STDOUT_FILENO);
     char **argv = this->createArgv();
-    char **_envp = this->createEnvp();
-    execve(this->path, argv, _envp);
+    char **envp = this->createEnvp();
+    execve("/usr/bin/python3", argv, envp);
+    delete argv;
+    delete envp;
     exit(0);
 }
 
 void ft::Cgi::runParent(void) {
     waitpid(this->_pid, NULL, 0);
-    this->closePipe();
+    close(this->_pipe_fd[1]);
     char buffer[1024];
     int ret = 0;
     while ((ret = read(this->_pipe_fd[0], buffer, 1024)) > 0) {
@@ -80,7 +121,6 @@ void ft::Cgi::runParent(void) {
 }
 
 void ft::Cgi::run(void) {
-    this->createEnv();
     this->createPipe();
     this->createProcess();
     if (this->_pid == 0) {
@@ -89,4 +129,8 @@ void ft::Cgi::run(void) {
         this->runParent();
     }
     this->closePipe();
+}
+
+std::string ft::Cgi::getResponse(void) const {
+    return (this->_response);
 }

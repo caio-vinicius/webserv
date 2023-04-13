@@ -4,15 +4,22 @@
 #ifndef CGI_HPP_
 #define CGI_HPP_
 
+#include <iostream>
 #include <map>
 #include <string>
+#include <vector>
+#include <cstring>
+
+#include <unistd.h>
+#include <sys/wait.h>
 
 namespace ft {
 class Cgi {
  public:
-    Cgi();
-    virtual ~Cgi();
+    Cgi(std::string const path, std::map<std::string, std::string> const env);
+    ~Cgi(void);
     void run(void);
+    std::string getResponse(void) const;
  private:
     int _pipe_fd[2];
     int _pid;
@@ -23,9 +30,13 @@ class Cgi {
 
     void createEnv(void);
     void createPipe(void);
+    char **createArgv(void);
+    char **createEnvp(void);
     void createProcess(void);
     void closePipe(void);
     void closeProcess(void);
+    void runChild(void);
+    void runParent(void);
 };
 
 }  // namespace ft
