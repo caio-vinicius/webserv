@@ -9,34 +9,37 @@
 #include <map>
 #include <iostream>
 #include <sstream>
+#include <cstdlib>
 
 namespace ft {
 
 class NewConfig {
  public:
-    NewConfig();
+    NewConfig() {};
     ~NewConfig() {};
     class Server;
     std::map<std::string, Server> server;
     void parse(std::string path);
     void parseServer(std::ifstream &file);
-    void parseLocation(std::ifstream &file, std::string &location_line);
- private:
-    std::map<std::string, void(*)(std::vector<std::string> &)> location_params;
-    std::map<std::string, void(*)(std::vector<std::string> &)> server_params;
+    void parseLocation(std::ifstream &file, std::string &location_line, ft::NewConfig::Server *server);
+    void createServerMap(ft::NewConfig::Server &server);
 };  // class NewConfig
 
 class NewConfig::Server {
  public:
-    Server() {};
+    Server();
     ~Server() {};
+
     class Location;
- private:
     struct address_port {
         std::string address;
         int port;
     };
+
+    std::vector<std::string> getRawAddress();
+ private:
     std::vector<address_port> listen;
+    std::vector<std::string> raw_address;
     std::vector<std::string> server_name;
     struct error_page {
         std::vector<int> code;
@@ -46,15 +49,23 @@ class NewConfig::Server {
     std::string root;
     std::string index;
     std::map<std::string, Location> location;
+    std::map<std::string, void(ft::NewConfig::Server::*)(std::vector<std::string> &)> serverParams;
 
     //friend class NewConfig;
     void processListen(std::vector<std::string> &params);
+    void processServerName(std::vector<std::string> &param);
+    void processErrorPage(std::vector<std::string> &param);
+    void processClientMaxBodySize(std::vector<std::string> &param);
+    void processRoot(std::vector<std::string> &param);
+    void processIndex(std::vector<std::string> &param);
 };  // NewConfig::Server
 
 class NewConfig::Server::Location {
  public:
-    Location() {};
+    Location();
     ~Location() {};
+
+    std::map<std::string, void(ft::NewConfig::Server::Location::*)(std::vector<std::string> &)> locationParams;
  private:
     std::string uri;
     enum autoindex {on, off};

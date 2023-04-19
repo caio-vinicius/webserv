@@ -5,61 +5,79 @@
 #include <fstream>
 #include <sstream>
 
+ft::NewConfig::Server::Server(){
+    this->serverParams["listen"] = &Server::processListen;
+    this->serverParams["server_name"] = &Server::processServerName;
+    this->serverParams["error_page"] = &Server::processErrorPage;
+    this->serverParams["client_max_body_size"] = &Server::processClientMaxBodySize;
+    this->serverParams["root"] = &Server::processRoot;
+    this->serverParams["index"] = &Server::processIndex;
+}
+
+ft::NewConfig::Server::Location::Location(){
+    this->locationParams["uri"] = &Location::processUri;
+    this->locationParams["autoindex"] = &Location::processAutoindex;
+}
+
 void ft::NewConfig::Server::processListen(std::vector<std::string> &param) {
+    std::vector<std::string>::iterator paramIterator = param.begin();
+    std::vector<std::string>    address;
+    address_port    structAddressPort;
+
+    paramIterator++;
+
+    while (paramIterator != param.end()) {
+        this->raw_address.push_back(*paramIterator);
+        address = ft::split(*paramIterator, ':');
+        //if (address.size != 2) ERRO;
+        structAddressPort.address = address[0];
+        structAddressPort.port = std::atoi(address[1].c_str());
+        listen.push_back(structAddressPort);
+    }
     std::cout << "Listen found" << std::endl;
 }
 
-void processServerName(std::vector<std::string> &param) {
+void ft::NewConfig::Server::processServerName(std::vector<std::string> &param) {
     std::cout << "ServerName found" << std::endl;
 }
 
-void processErrorPage(std::vector<std::string> &param) {
+void ft::NewConfig::Server::processErrorPage(std::vector<std::string> &param) {
     std::cout << "ErrorPage found" << std::endl;
 }
 
-void processClientMaxBodySize(std::vector<std::string> &param) {
+void ft::NewConfig::Server::processClientMaxBodySize(std::vector<std::string> &param) {
     std::cout << "ClientMaxBodySize found" << std::endl;
 }
 
-void processRoot(std::vector<std::string> &param) {
+void ft::NewConfig::Server::processRoot(std::vector<std::string> &param) {
     std::cout << "Root found" << std::endl;
 }
 
-void processIndex(std::vector<std::string> &param) {
+void ft::NewConfig::Server::processIndex(std::vector<std::string> &param) {
     std::cout << "Index found" << std::endl;
 }
 
-void processUri(std::vector<std::string> &param) {
+void ft::NewConfig::Server::Location::processUri(std::vector<std::string> &param) {
     std::cout << "Uri found" << std::endl;
     //this->uri = param[1];
 }
 
-void processAutoindex(std::vector<std::string> &param) {
+void ft::NewConfig::Server::Location::processAutoindex(std::vector<std::string> &param) {
     std::cout << "Autoindex found" << std::endl;
     // TODO: implement verification if param[1] exists
     //this->autoindex = param[1];
 }
 
-ft::NewConfig::NewConfig() {
-    this->server_params["listen"] = &processListen;
-    this->server_params["server_name"] = &processServerName;
-    this->server_params["error_page"] = &processErrorPage;
-    this->server_params["client_max_body_size"] = &processClientMaxBodySize;
-    this->server_params["root"] = &processRoot;
-    this->server_params["index"] = &processIndex;
-    this->location_params["uri"] = &processLocationUri;
-    this->location_params["autoindex"] = &processLocationAutoindex;
-    std::map<std::string, void(*)(std::vector<std::string> &)> location_params;
-}
-
-
-void ft::NewConfig::parseLocation(std::ifstream &file, std::string &location_line) {
+void ft::NewConfig::parseLocation(std::ifstream &file, std::string &location_line, ft::NewConfig::Server *server) {
     std::string token;
     std::vector<std::string> param;
+    std::map<std::string, void(ft::NewConfig::Server::Location::*)(std::vector<std::string> &)>::iterator it;
+    ft::NewConfig::Server::Location   locationClass = ft::NewConfig::Server::Location();
 
     ft::trim(location_line);
     param = ft::split(location_line, ' ');
-    this->location_params.at("uri")(param);
+    it = locationClass.locationParams.find("uri");
+    it->second(param);
     while (std::getline(file, token, '\n'))
     {
         if (token.find("}") != std::string::npos) {
@@ -67,7 +85,7 @@ void ft::NewConfig::parseLocation(std::ifstream &file, std::string &location_lin
         }
         ft::trim(token);
         param = ft::split(token, ' ');
-        std::map<std::string, void(*)(std::vector<std::string> &)>::iterator it = this->location_params.find(param[0]);
+        it = this->location_params.find(param[0]);
         if (it != this->location_params.end()) {
             it->second(param);
         } else {
@@ -76,23 +94,36 @@ void ft::NewConfig::parseLocation(std::ifstream &file, std::string &location_lin
     }
 }
 
+void ft::NewConfig::createServerMap(ft::NewConfig::Server &server) {
+    std::vector<std::string>::iterator  addressIterator;
+
+    addressIterator = server.getRawAddress().begin();
+    while (addressIterator != server.getRawAddress().end()) {
+        this->server[*addressIterator] = server;
+    }
+}
+
 void ft::NewConfig::parseServer(std::ifstream &file) {
     std::string token;
     std::vector<std::string> param;
+    std::map<std::string, void(ft::NewConfig::Server::Location::*)(std::vector<std::string> &)>::iterator it;
+    ft::NewConfig::Server   serverClass = ft::NewConfig::Server();
 
     while (getline(file, token, '\n')) {
         if (token.find("location") != std::string::npos && \
             token.find("{") != std::string::npos) {
-            this->parseLocation(file, token);
+            this->parseLocation(file, token, &serverClass);
             continue ;
         }
         if (token.find("}") != std::string::npos) {
+            this->server[serverClass.getListen().at(0)] = serverClass;
+            createServerMap(&serverClass);
             break ;
         }
         ft::trim(token);
         param = ft::split(token, ' ');
-        std::map<std::string, void(*)(std::vector<std::string> &)>::iterator it = this->server_params.find(param[0]);
-        if (it != this->server_params.end()) {
+        it = serverClass.serverParams.find(param[0]);
+        if (it != serverClass.serverParams.end()) {
             it->second(param);
         } else {
             std::cerr << "webserv: [emerg] param not found: '" << param[0] << "'" << std::endl;
