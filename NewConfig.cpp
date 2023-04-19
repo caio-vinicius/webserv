@@ -13,17 +13,49 @@ ft::NewConfig::Server::Server() {
     this->params["client_max_body_size"] = &Server::processClientMaxBodySize;
     this->params["root"] = &Server::processRoot;
     this->params["index"] = &Server::processIndex;
+
+    std::vector<std::string> param;
+    param.push_back("listen");
+    param.push_back("localhost:80");
+    param.push_back("localhost:8000");
+    processListen(param);
+
+    param.clear();
+    param.push_back("server_name");
+    param.push_back("");
+    processServerName(param);
+
+    param.clear();
+    param.push_back("client_max_body_size");
+    param.push_back("1m");
+    processClientMaxBodySize(param);
+
+    param.clear();
+    param.push_back("root");
+    param.push_back("html");
+    processRoot(param);
 }
 
 ft::NewConfig::Server::Location::Location() {
     this->params["uri"] = &Location::processUri;
     this->params["autoindex"] = &Location::processAutoindex;
+
+    std::vector<std::string> param;
+    param.push_back("uri");
+    param.push_back("/");
+    processUri(param);
+
+    param.clear();
+    param.push_back("autoindex");
+    param.push_back("off");
+    processAutoindex(param);
 }
 
 void ft::NewConfig::Server::processListen(std::vector<std::string> &param) {
     struct address_port listen;
     std::vector<std::string>::iterator it;
     std::vector<std::string> address_port;
+    this->listen.clear();
 
     it = param.begin();
     it++;
@@ -38,6 +70,7 @@ void ft::NewConfig::Server::processListen(std::vector<std::string> &param) {
 
 void ft::NewConfig::Server::processServerName(std::vector<std::string> &param) {
     std::vector<std::string>::iterator it;
+    this->server_name.clear();
 
     it = param.begin();
     it++;
@@ -82,6 +115,7 @@ void ft::NewConfig::Server::processRoot(std::vector<std::string> &param) {
 
 void ft::NewConfig::Server::processIndex(std::vector<std::string> &param) {
     std::vector<std::string>::iterator it;
+    this->index.clear();
 
     it = param.begin();
     it++;
@@ -167,10 +201,13 @@ void ft::NewConfig::parseServer(std::ifstream &file) {
                 this->server[it->address + ":" + ss.str()] = current_server;
                 it++;
             }
-            break;
+            return;
         }
         ft::trim(token);
         param = ft::split(token, ' ');
+        if (param.size() == 0) {
+            continue;
+        }
         it = current_server.params.find(param[0]);
         if (it != current_server.params.end()) {
             (current_server.*(it->second))(param);
@@ -179,6 +216,7 @@ void ft::NewConfig::parseServer(std::ifstream &file) {
                 param[0] << "'" << std::endl;
         }
     }
+    std::cerr << "webserv: [emerg] syntax error server not closed" << std::endl;
 }
 
 void ft::NewConfig::parse(std::string path) {
@@ -200,51 +238,4 @@ void ft::NewConfig::parse(std::string path) {
             }
         }
     }
-}
-
-int main(void) {
-    ft::NewConfig config;
-    config.parse("webserv.conf");
-
-//    // nivel 1 config
-//
-//    // nivel 2 config::server
-//
-//    config.server["localhost:8080"].listen[0].address; // address of the server
-    std::cout << "server: " << config.server["localhost:8080"].listen[0].address << std::endl;
-//    config->server["localhost:8084"]->listen[0].address; // address of the server
-    std::cout << "server: " << config.server["localhost:8084"].listen[0].address << std::endl;
-//    config->server["localhost:8080"]->listen[0].port; // port of the server
-    std::cout << "server: " << config.server["localhost:8080"].listen[0].port << std::endl;
-//    config->server["localhost:8084"]->listen[0].port; // port of the server
-    std::cout << "server: " << config.server["localhost:8084"].listen[0].port << std::endl;
-//    config->server["localhost:8080"]->server_name; // server_name of the server
-    std::cout << "server: " << config.server["localhost:8080"].server_name[0] << std::endl;
-//    config->server["localhost:8080"]->error_page.code; // vector of codes
-    std::cout << "server: " << config.server["localhost:8080"].error_page.code[0] << std::endl;
-//    config->server["localhost:8080"]->error_page.path; // error page path
-    std::cout << "server: " << config.server["localhost:8080"].error_page.path << std::endl;
-//    config->server["localhost:8080"]->client_max_body_size; // max body size server
-    std::cout << "server: " << config.server["localhost:8080"].client_max_body_size << std::endl;
-//    config->server["localhost:8080"]->root; // root path of the server
-    std::cout << "server: " << config.server["localhost:8080"].root << std::endl;
-//    config->server["localhost:8080"]->index; // index of the server
-    std::cout << "server: " << config.server["localhost:8080"].index[0] << std::endl;
-//
-//    it_server = config->server.begin();
-//    ite_server = config->server.end();
-//    while (it_server != ite_server) {
-//        it_server->second->listen.address; // address of the server
-//    }
-//
-//    // nivel 3 config::server::location
-//
-//    config->server["localhost:8080"]->location["/"]->uri; // uri of the location
-//    config->server["localhost:8080"]->location["/"]->autoindex; // autoindex of the location
-//
-//    it_location = config->server["localhost:8080"]->location.begin();
-//    ite_location = config->server["localhost:8080"]->location.end();
-//    while (it_location != ite_location) {
-//        it_location->second->uri; // uri of the location
-//    }
 }
