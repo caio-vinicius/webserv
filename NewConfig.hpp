@@ -15,14 +15,13 @@ namespace ft {
 
 class NewConfig {
  public:
-    NewConfig() {};
-    ~NewConfig() {};
+    NewConfig() {}
+    ~NewConfig() {}
     class Server;
     std::map<std::string, Server> server;
     void parse(std::string path);
     void parseServer(std::ifstream &file);
-    void parseLocation(std::ifstream &file, std::string &location_line, ft::NewConfig::Server *server);
-    void createServerMap(ft::NewConfig::Server &server);
+    void parseLocation(std::ifstream &file, std::string &location_line, Server &server);
 };  // class NewConfig
 
 class NewConfig::Server {
@@ -30,34 +29,36 @@ class NewConfig::Server {
     Server();
     ~Server() {};
 
+    std::string getRawPort() {
+        std::stringstream ss;
+        ss << listen.front().port;
+        return ss.str();
+    };
     class Location;
+    std::map<std::string, void(ft::NewConfig::Server::*)(std::vector<std::string> &)> params;
+    std::map<std::string, Location> location;
     struct address_port {
         std::string address;
         int port;
     };
-
-    std::vector<std::string> getRawAddress();
- private:
     std::vector<address_port> listen;
-    std::vector<std::string> raw_address;
     std::vector<std::string> server_name;
-    struct error_page {
+    struct error_page_t {
         std::vector<int> code;
         std::string path;
     };
+    error_page_t error_page;
     size_t client_max_body_size;
     std::string root;
-    std::string index;
-    std::map<std::string, Location> location;
-    std::map<std::string, void(ft::NewConfig::Server::*)(std::vector<std::string> &)> serverParams;
+    std::vector<std::string> index;
 
-    //friend class NewConfig;
     void processListen(std::vector<std::string> &params);
     void processServerName(std::vector<std::string> &param);
     void processErrorPage(std::vector<std::string> &param);
     void processClientMaxBodySize(std::vector<std::string> &param);
     void processRoot(std::vector<std::string> &param);
     void processIndex(std::vector<std::string> &param);
+ private:
 };  // NewConfig::Server
 
 class NewConfig::Server::Location {
@@ -65,13 +66,13 @@ class NewConfig::Server::Location {
     Location();
     ~Location() {};
 
-    std::map<std::string, void(ft::NewConfig::Server::Location::*)(std::vector<std::string> &)> locationParams;
- private:
-    std::string uri;
-    enum autoindex {on, off};
-
     void processAutoindex(std::vector<std::string> &param);
     void processUri(std::vector<std::string> &param);
+    std::map<std::string, void(ft::NewConfig::Server::Location::*)(std::vector<std::string> &)> params;
+
+    std::string uri;
+    bool autoindex;
+ private:
 };  // class NewConfig::Server::Location
 
 // external trim

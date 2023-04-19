@@ -4,129 +4,179 @@
 #include "./NewConfig.hpp"
 #include <fstream>
 #include <sstream>
+#include <cstdlib>
 
-ft::NewConfig::Server::Server(){
-    this->serverParams["listen"] = &Server::processListen;
-    this->serverParams["server_name"] = &Server::processServerName;
-    this->serverParams["error_page"] = &Server::processErrorPage;
-    this->serverParams["client_max_body_size"] = &Server::processClientMaxBodySize;
-    this->serverParams["root"] = &Server::processRoot;
-    this->serverParams["index"] = &Server::processIndex;
+ft::NewConfig::Server::Server() {
+    this->params["listen"] = &Server::processListen;
+    this->params["server_name"] = &Server::processServerName;
+    this->params["error_page"] = &Server::processErrorPage;
+    this->params["client_max_body_size"] = &Server::processClientMaxBodySize;
+    this->params["root"] = &Server::processRoot;
+    this->params["index"] = &Server::processIndex;
 }
 
-ft::NewConfig::Server::Location::Location(){
-    this->locationParams["uri"] = &Location::processUri;
-    this->locationParams["autoindex"] = &Location::processAutoindex;
+ft::NewConfig::Server::Location::Location() {
+    this->params["uri"] = &Location::processUri;
+    this->params["autoindex"] = &Location::processAutoindex;
 }
 
 void ft::NewConfig::Server::processListen(std::vector<std::string> &param) {
-    std::vector<std::string>::iterator paramIterator = param.begin();
-    std::vector<std::string>    address;
-    address_port    structAddressPort;
+    struct address_port listen;
+    std::vector<std::string>::iterator it;
+    std::vector<std::string> address_port;
 
-    paramIterator++;
-
-    while (paramIterator != param.end()) {
-        this->raw_address.push_back(*paramIterator);
-        address = ft::split(*paramIterator, ':');
-        //if (address.size != 2) ERRO;
-        structAddressPort.address = address[0];
-        structAddressPort.port = std::atoi(address[1].c_str());
-        listen.push_back(structAddressPort);
+    it = param.begin();
+    it++;
+    while (it != param.end()) {
+        address_port = ft::split(*it, ':');
+        listen.address = address_port[0];
+        listen.port = std::atoi(address_port[1].c_str());
+        this->listen.push_back(listen);
+        it++;
     }
-    std::cout << "Listen found" << std::endl;
 }
 
 void ft::NewConfig::Server::processServerName(std::vector<std::string> &param) {
-    std::cout << "ServerName found" << std::endl;
+    std::vector<std::string>::iterator it;
+
+    it = param.begin();
+    it++;
+    while (it != param.end()) {
+        this->server_name.push_back(*it);
+        it++;
+    }
 }
 
 void ft::NewConfig::Server::processErrorPage(std::vector<std::string> &param) {
-    std::cout << "ErrorPage found" << std::endl;
+    std::vector<std::string>::iterator it;
+
+    this->error_page.path = param.back();
+    param.pop_back();
+    it = param.begin();
+    it++;
+    while (it != param.end()) {
+        this->error_page.code.push_back(std::atoi(it->c_str()));
+        it++;
+    }
 }
 
-void ft::NewConfig::Server::processClientMaxBodySize(std::vector<std::string> &param) {
-    std::cout << "ClientMaxBodySize found" << std::endl;
+void ft::NewConfig::Server::processClientMaxBodySize(
+    std::vector<std::string> &param) {
+    std::string body_size;
+
+    body_size = param.back();
+    if (body_size.find("k") != std::string::npos) {
+        body_size.erase(body_size.find("k"), 1);
+        this->client_max_body_size = std::atoi(body_size.c_str()) * 1024;
+    } else if (body_size.find("m") != std::string::npos) {
+        body_size.erase(body_size.find("m"), 1);
+        this->client_max_body_size = std::atoi(body_size.c_str()) * 1024 * 1024;
+    } else {
+        this->client_max_body_size = std::atoi(body_size.c_str());
+    }
 }
 
 void ft::NewConfig::Server::processRoot(std::vector<std::string> &param) {
-    std::cout << "Root found" << std::endl;
+    this->root = param.back();
 }
 
 void ft::NewConfig::Server::processIndex(std::vector<std::string> &param) {
-    std::cout << "Index found" << std::endl;
+    std::vector<std::string>::iterator it;
+
+    it = param.begin();
+    it++;
+    while (it != param.end()) {
+        this->index.push_back(*it);
+        it++;
+    }
 }
 
-void ft::NewConfig::Server::Location::processUri(std::vector<std::string> &param) {
-    std::cout << "Uri found" << std::endl;
-    //this->uri = param[1];
+void ft::NewConfig::Server::Location::processUri(
+    std::vector<std::string> &param) {
+    param.pop_back();
+    this->uri = param.back();
 }
 
-void ft::NewConfig::Server::Location::processAutoindex(std::vector<std::string> &param) {
-    std::cout << "Autoindex found" << std::endl;
-    // TODO: implement verification if param[1] exists
-    //this->autoindex = param[1];
+void ft::NewConfig::Server::Location::processAutoindex(
+    std::vector<std::string> &param) {
+    std::string autoindex;
+
+    autoindex = param.back();
+    if (autoindex == "on") {
+        this->autoindex = true;
+    } else {
+        this->autoindex = false;
+    }
 }
 
-void ft::NewConfig::parseLocation(std::ifstream &file, std::string &location_line, ft::NewConfig::Server *server) {
+void ft::NewConfig::parseLocation(
+    std::ifstream &file,
+    std::string &location_line, ft::NewConfig::Server &server) {
     std::string token;
     std::vector<std::string> param;
-    std::map<std::string, void(ft::NewConfig::Server::Location::*)(std::vector<std::string> &)>::iterator it;
-    ft::NewConfig::Server::Location   locationClass = ft::NewConfig::Server::Location();
+    std::map
+        <std::string,
+        void(ft::NewConfig::Server::Location::*)\
+        (std::vector<std::string> &)>::iterator it;
+    ft::NewConfig::Server::Location current_location = \
+        ft::NewConfig::Server::Location();
 
     ft::trim(location_line);
     param = ft::split(location_line, ' ');
-    it = locationClass.locationParams.find("uri");
-    it->second(param);
-    while (std::getline(file, token, '\n'))
-    {
+    current_location.processUri(param);
+    while (std::getline(file, token, '\n')) {
         if (token.find("}") != std::string::npos) {
+            server.location[current_location.uri] = current_location;
             break;
         }
         ft::trim(token);
         param = ft::split(token, ' ');
-        it = this->location_params.find(param[0]);
-        if (it != this->location_params.end()) {
-            it->second(param);
+        it = current_location.params.find(param[0]);
+        if (it != current_location.params.end()) {
+            (current_location.*(it->second))(param);
         } else {
-            std::cerr << "webserv: [emerg] param not found: '" << param[0] << "'" << std::endl;
+            std::cerr << "webserv: [emerg] param not found: '" << \
+                param[0] << "'" << std::endl;
         }
-    }
-}
-
-void ft::NewConfig::createServerMap(ft::NewConfig::Server &server) {
-    std::vector<std::string>::iterator  addressIterator;
-
-    addressIterator = server.getRawAddress().begin();
-    while (addressIterator != server.getRawAddress().end()) {
-        this->server[*addressIterator] = server;
     }
 }
 
 void ft::NewConfig::parseServer(std::ifstream &file) {
     std::string token;
     std::vector<std::string> param;
-    std::map<std::string, void(ft::NewConfig::Server::Location::*)(std::vector<std::string> &)>::iterator it;
-    ft::NewConfig::Server   serverClass = ft::NewConfig::Server();
+    ft::NewConfig::Server current_server = ft::NewConfig::Server();
+    std::map
+        <std::string,
+        void(ft::NewConfig::Server::*)(std::vector<std::string> &)>
+        ::iterator it;
 
     while (getline(file, token, '\n')) {
         if (token.find("location") != std::string::npos && \
             token.find("{") != std::string::npos) {
-            this->parseLocation(file, token, &serverClass);
-            continue ;
+            this->parseLocation(file, token, current_server);
+            continue;
         }
         if (token.find("}") != std::string::npos) {
-            this->server[serverClass.getListen().at(0)] = serverClass;
-            createServerMap(&serverClass);
-            break ;
+            std::vector<NewConfig::Server::address_port>::iterator it;
+
+            it = current_server.listen.begin();
+            while (it != current_server.listen.end()) {
+                std::stringstream ss;
+                std::string port;
+                ss << it->port;
+                this->server[it->address + ":" + ss.str()] = current_server;
+                it++;
+            }
+            break;
         }
         ft::trim(token);
         param = ft::split(token, ' ');
-        it = serverClass.serverParams.find(param[0]);
-        if (it != serverClass.serverParams.end()) {
-            it->second(param);
+        it = current_server.params.find(param[0]);
+        if (it != current_server.params.end()) {
+            (current_server.*(it->second))(param);
         } else {
-            std::cerr << "webserv: [emerg] param not found: '" << param[0] << "'" << std::endl;
+            std::cerr << "webserv: [emerg] param not found: '" << \
+                param[0] << "'" << std::endl;
         }
     }
 }
@@ -160,16 +210,26 @@ int main(void) {
 //
 //    // nivel 2 config::server
 //
-//    config->server["localhost:8080"]->listen[0].address; // address of the server
+//    config.server["localhost:8080"].listen[0].address; // address of the server
+    std::cout << "server: " << config.server["localhost:8080"].listen[0].address << std::endl;
 //    config->server["localhost:8084"]->listen[0].address; // address of the server
+    std::cout << "server: " << config.server["localhost:8084"].listen[0].address << std::endl;
 //    config->server["localhost:8080"]->listen[0].port; // port of the server
+    std::cout << "server: " << config.server["localhost:8080"].listen[0].port << std::endl;
 //    config->server["localhost:8084"]->listen[0].port; // port of the server
+    std::cout << "server: " << config.server["localhost:8084"].listen[0].port << std::endl;
 //    config->server["localhost:8080"]->server_name; // server_name of the server
+    std::cout << "server: " << config.server["localhost:8080"].server_name[0] << std::endl;
 //    config->server["localhost:8080"]->error_page.code; // vector of codes
+    std::cout << "server: " << config.server["localhost:8080"].error_page.code[0] << std::endl;
 //    config->server["localhost:8080"]->error_page.path; // error page path
+    std::cout << "server: " << config.server["localhost:8080"].error_page.path << std::endl;
 //    config->server["localhost:8080"]->client_max_body_size; // max body size server
+    std::cout << "server: " << config.server["localhost:8080"].client_max_body_size << std::endl;
 //    config->server["localhost:8080"]->root; // root path of the server
+    std::cout << "server: " << config.server["localhost:8080"].root << std::endl;
 //    config->server["localhost:8080"]->index; // index of the server
+    std::cout << "server: " << config.server["localhost:8080"].index[0] << std::endl;
 //
 //    it_server = config->server.begin();
 //    ite_server = config->server.end();
