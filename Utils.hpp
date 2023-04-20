@@ -3,8 +3,19 @@
 
 #ifndef UTILS_HPP_
 #define UTILS_HPP_
+
 #include <string>
+#include <vector>
+#include <string>
+#include <iterator>
+#include <sstream>
+
+namespace utils {
 
 std::string remove_chr(std::string str, char ch);
+void trim(std::string str);
+std::vector<std::string> split(std::string &str, char delimiter);
+
+}  // namespace Utils
 
 #endif  // UTILS_HPP_

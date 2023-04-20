@@ -101,7 +101,7 @@ void requestLine(std::istringstream &ss,
 
     std::getline(ss, request_line);
 
-    std::vector<std::string> vec = ft::split(request_line,  ' ');
+    std::vector<std::string> vec = utils::split(request_line,  ' ');
 
     (*header)["Method"] = vec.at(0);
     (*header)["URI"] = vec.at(1);
@@ -123,7 +123,7 @@ std::map<std::string, std::string> ft::Server::loadHeader(char *buffer) {
         }
         key = line.substr(0, line.find(":"));
         value = line.substr(line.find(":") + 2);
-        value = remove_chr(value, 13);
+        value = utils::remove_chr(value, 13);
         header[key] = value;
     }
     return (header);

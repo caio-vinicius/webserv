@@ -2,6 +2,7 @@
 /* All rights reserved. 42 */
 
 #include "./Config.hpp"
+#include "./Utils.hpp"
 #include <fstream>
 #include <sstream>
 #include <cstdlib>
@@ -60,7 +61,7 @@ void ft::Config::Server::processListen(std::vector<std::string> &param) {
     it = param.begin();
     it++;
     while (it != param.end()) {
-        address_port = ft::split(*it, ':');
+        address_port = utils::split(*it, ':');
         listen.address = address_port[0];
         listen.port = std::atoi(address_port[1].c_str());
         this->listen.push_back(listen);
@@ -155,16 +156,16 @@ void ft::Config::parseLocation(
     ft::Config::Server::Location current_location = \
         ft::Config::Server::Location();
 
-    ft::trim(location_line);
-    param = ft::split(location_line, ' ');
+    utils::trim(location_line);
+    param = utils::split(location_line, ' ');
     current_location.processUri(param);
     while (std::getline(file, token, '\n')) {
         if (token.find("}") != std::string::npos) {
             server.location[current_location.uri] = current_location;
             break;
         }
-        ft::trim(token);
-        param = ft::split(token, ' ');
+        utils::trim(token);
+        param = utils::split(token, ' ');
         it = current_location.params.find(param[0]);
         if (it != current_location.params.end()) {
             (current_location.*(it->second))(param);
@@ -203,8 +204,8 @@ void ft::Config::parseServer(std::ifstream &file) {
             }
             return;
         }
-        ft::trim(token);
-        param = ft::split(token, ' ');
+        utils::trim(token);
+        param = utils::split(token, ' ');
         if (param.size() == 0) {
             continue;
         }

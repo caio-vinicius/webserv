@@ -1,12 +1,9 @@
 /* Copyright (c) 2023 Caio Souza, Guilherme Martinelli, Luigi Ferrari. */
 /* All rights reserved. 42 */
 
-#include <string>
-#include <iterator>
-
 #include "./Utils.hpp"
 
-std::string remove_chr(std::string str, char ch) {
+std::string utils::remove_chr(std::string str, char ch) {
     for (std::string::iterator it = str.begin(); it != str.end(); ) {
         if (*it == ch) {
             it = str.erase(it);
@@ -15,4 +12,19 @@ std::string remove_chr(std::string str, char ch) {
         }
     }
     return (str);
+}
+
+void utils::trim(std::string str) {
+    str.erase(0, str.find_first_not_of("\t\n\v\f\r "));
+    str.erase(str.find_last_not_of("\t\n\v\f\r ") + 1);
+}
+
+std::vector<std::string> utils::split(std::string &str, char delimiter) {
+    std::vector<std::string> result;
+    std::istringstream iss(str);
+    std::string token;
+
+    while (getline(iss, token, delimiter))
+        result.push_back(token);
+    return (result);
 }

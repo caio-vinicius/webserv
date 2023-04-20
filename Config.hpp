@@ -75,23 +75,6 @@ class Config::Server::Location {
  private:
 };  // class Config::Server::Location
 
-// external trim
-void trim(std::string &str) {
-    str.erase(0, str.find_first_not_of("\t\n\v\f\r "));
-    str.erase(str.find_last_not_of("\t\n\v\f\r ") + 1);
-}
-
-// external split
-std::vector<std::string> split(std::string &str, char delimiter) {
-    std::vector<std::string> result;
-    std::istringstream iss(str);
-    std::string token;
-
-    while (getline(iss, token, delimiter))
-        result.push_back(token);
-    return (result);
-}
-
 }  // namespace ft
 
 #endif  // CONFIG_HPP_
