@@ -22,29 +22,9 @@
 #include "./Server.hpp"
 #include "./Method.hpp"
 #include "./Response.hpp"
+#include "./Config.hpp"
 
 bool ft::quit = false;
-
-std::vector<string> mysplit(std::string str, char separator) {
-    std::string line;
-    std::vector<string> vec;
-    while (str.find(separator) != std::string::npos) {
-        line = str.substr(0, str.find(separator));
-        vec.push_back(line);
-        str = str.c_str() +  str.find(separator) + 1;
-    }
-    vec.push_back(str);
-    return (vec);
-}
-
-int strToInt(std::string str) {
-    int num;
-
-    std::stringstream ss(str);
-    ss >> num;
-
-    return num;
-}
 
 ft::Server::Server(void) {}
 
@@ -78,8 +58,8 @@ ft::Server::Server(Config config): _config(config) {
         memset(&serv_addr, 0, sizeof(sockaddr_in));
         serv_addr.sin_family = AF_INET;
         serv_addr.sin_addr.s_addr = inet_addr(
-            it_servers->second.params["bind"].c_str());
-        serv_addr.sin_port = htons(strToInt(it_servers->second.params["port"]));
+            it_servers->second.listen.at(0).address.c_str());
+        serv_addr.sin_port = htons((it_servers->second.listen.at(0).port));
         if (bind(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr))) {
             perror("Erro ao ligar o socket");
             exit(1);
@@ -88,10 +68,10 @@ ft::Server::Server(Config config): _config(config) {
             perror("Erro ao ligar o listen");
             exit(1);
         }
-        std::cout << "Server listening on " << \
-            it_servers->second.params["bind"];
-        std::cout << ":" << \
-            it_servers->second.params["port"] << std::endl;
+        // std::cout << "Server listening on " << \
+        //     it_servers->second.listen.at(0).address;
+        // std::cout << ":" << \
+        //     it_servers->second.listen.at(0).port << std::endl;
         this->_sockaddrs.push_back(serv_addr);
         this->_sockets.push_back(sockfd);
     }
@@ -121,7 +101,7 @@ void requestLine(std::istringstream &ss,
 
     std::getline(ss, request_line);
 
-    std::vector<string> vec = mysplit(request_line,  ' ');
+    std::vector<std::string> vec = ft::split(request_line,  ' ');
 
     (*header)["Method"] = vec.at(0);
     (*header)["URI"] = vec.at(1);

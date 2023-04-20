@@ -18,7 +18,8 @@ int main(int argc, char **argv) {
     } else if (argc != 1) {
         configFilePath = argv[1];
     }
-    ft::Config config(configFilePath);
+    ft::Config config = ft::Config();
+    config.parse(configFilePath);
     ft::Server server(config);
     server.run();
 }

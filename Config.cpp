@@ -1,138 +1,241 @@
 /* Copyright (c) 2023 Caio Souza, Guilherme Martinelli, Luigi Ferrari. */
 /* All rights reserved. 42 */
 
-#include <poll.h>
-
-#include <iostream>
-#include <string>
-#include <cstdlib>
+#include "./Config.hpp"
 #include <fstream>
 #include <sstream>
+#include <cstdlib>
 
-#include "./Config.hpp"
-#include "./Utils.hpp"
+ft::Config::Server::Server() {
+    this->params["listen"] = &Server::processListen;
+    this->params["server_name"] = &Server::processServerName;
+    this->params["error_page"] = &Server::processErrorPage;
+    this->params["client_max_body_size"] = &Server::processClientMaxBodySize;
+    this->params["root"] = &Server::processRoot;
+    this->params["index"] = &Server::processIndex;
 
+    std::vector<std::string> param;
+    param.push_back("listen");
+    param.push_back("localhost:80");
+    param.push_back("localhost:8000");
+    processListen(param);
 
-ft::Config::Config(std::string const filename) : _filename(filename) {
-    std::map<std::string, std::string> conf;
+    param.clear();
+    param.push_back("server_name");
+    param.push_back("");
+    processServerName(param);
 
-    std::ifstream configFile(this->_filename.c_str());
+    param.clear();
+    param.push_back("client_max_body_size");
+    param.push_back("1m");
+    processClientMaxBodySize(param);
 
-    if (!configFile.is_open()) {
-        exit(-1);
-    }
-    this->load(configFile);
-    std::cout << "Config file loaded" << std::endl;
+    param.clear();
+    param.push_back("root");
+    param.push_back("html");
+    processRoot(param);
 }
 
-ft::Config::~Config() {}
+ft::Config::Server::Location::Location() {
+    this->params["uri"] = &Location::processUri;
+    this->params["autoindex"] = &Location::processAutoindex;
 
-ft::Config::Location    ft::Config::locationContext(std::ifstream &configFile) {
-    std::string line, key, value;
-    ft::Config::Location   location = ft::Config::Location();
+    std::vector<std::string> param;
+    param.push_back("uri");
+    param.push_back("/");
+    processUri(param);
 
-    while (std::getline(configFile, line)) {
-        std::istringstream lineStream(line);
-        if (!line.empty()) {
-            if (line.find("}") != std::string::npos) {
-                return location;
-            } else {
-                lineStream >> key >> value;
-                value = remove_chr(value, ';');
-                // checar se param é válido
-                location.params[key] = value;
-            }
+    param.clear();
+    param.push_back("autoindex");
+    param.push_back("off");
+    processAutoindex(param);
+}
+
+void ft::Config::Server::processListen(std::vector<std::string> &param) {
+    struct address_port listen;
+    std::vector<std::string>::iterator it;
+    std::vector<std::string> address_port;
+    this->listen.clear();
+
+    it = param.begin();
+    it++;
+    while (it != param.end()) {
+        address_port = ft::split(*it, ':');
+        listen.address = address_port[0];
+        listen.port = std::atoi(address_port[1].c_str());
+        this->listen.push_back(listen);
+        it++;
+    }
+}
+
+void ft::Config::Server::processServerName(std::vector<std::string> &param) {
+    std::vector<std::string>::iterator it;
+    this->server_name.clear();
+
+    it = param.begin();
+    it++;
+    while (it != param.end()) {
+        this->server_name.push_back(*it);
+        it++;
+    }
+}
+
+void ft::Config::Server::processErrorPage(std::vector<std::string> &param) {
+    std::vector<std::string>::iterator it;
+
+    this->error_page.path = param.back();
+    param.pop_back();
+    it = param.begin();
+    it++;
+    while (it != param.end()) {
+        this->error_page.code.push_back(std::atoi(it->c_str()));
+        it++;
+    }
+}
+
+void ft::Config::Server::processClientMaxBodySize(
+    std::vector<std::string> &param) {
+    std::string body_size;
+
+    body_size = param.back();
+    if (body_size.find("k") != std::string::npos) {
+        body_size.erase(body_size.find("k"), 1);
+        this->client_max_body_size = std::atoi(body_size.c_str()) * 1024;
+    } else if (body_size.find("m") != std::string::npos) {
+        body_size.erase(body_size.find("m"), 1);
+        this->client_max_body_size = std::atoi(body_size.c_str()) * 1024 * 1024;
+    } else {
+        this->client_max_body_size = std::atoi(body_size.c_str());
+    }
+}
+
+void ft::Config::Server::processRoot(std::vector<std::string> &param) {
+    this->root = param.back();
+}
+
+void ft::Config::Server::processIndex(std::vector<std::string> &param) {
+    std::vector<std::string>::iterator it;
+    this->index.clear();
+
+    it = param.begin();
+    it++;
+    while (it != param.end()) {
+        this->index.push_back(*it);
+        it++;
+    }
+}
+
+void ft::Config::Server::Location::processUri(
+    std::vector<std::string> &param) {
+    param.pop_back();
+    this->uri = param.back();
+}
+
+void ft::Config::Server::Location::processAutoindex(
+    std::vector<std::string> &param) {
+    std::string autoindex;
+
+    autoindex = param.back();
+    if (autoindex == "on") {
+        this->autoindex = true;
+    } else {
+        this->autoindex = false;
+    }
+}
+
+void ft::Config::parseLocation(
+    std::ifstream &file,
+    std::string &location_line, ft::Config::Server &server) {
+    std::string token;
+    std::vector<std::string> param;
+    std::map
+        <std::string,
+        void(ft::Config::Server::Location::*)\
+        (std::vector<std::string> &)>::iterator it;
+    ft::Config::Server::Location current_location = \
+        ft::Config::Server::Location();
+
+    ft::trim(location_line);
+    param = ft::split(location_line, ' ');
+    current_location.processUri(param);
+    while (std::getline(file, token, '\n')) {
+        if (token.find("}") != std::string::npos) {
+            server.location[current_location.uri] = current_location;
+            break;
+        }
+        ft::trim(token);
+        param = ft::split(token, ' ');
+        it = current_location.params.find(param[0]);
+        if (it != current_location.params.end()) {
+            (current_location.*(it->second))(param);
+        } else {
+            std::cerr << "webserv: [emerg] param not found: '" << \
+                param[0] << "'" << std::endl;
         }
     }
-    std::cout << "ERROR!! Missing }:" << line << std::endl;
-    exit(-1);
 }
 
-ft::Config::Server     ft::Config::serverContext(std::ifstream &configFile) {
-    std::string line, context, path, key, value;
-    ft::Config::Server    server = ft::Config::Server();
-    Location    location = Location();
+void ft::Config::parseServer(std::ifstream &file) {
+    std::string token;
+    std::vector<std::string> param;
+    ft::Config::Server current_server = ft::Config::Server();
+    std::map
+        <std::string,
+        void(ft::Config::Server::*)(std::vector<std::string> &)>
+        ::iterator it;
 
-    while (std::getline(configFile, line)) {
-        std::istringstream lineStream(line);
-        if (!line.empty()) {
-            if (line.find("location") != std::string::npos) {
-                lineStream >> context >> path;
-                server.location[path] = locationContext(configFile);
-            } else if (line.find("}") != std::string::npos) {
-                return server;
-            } else {
-                lineStream >> key >> value;
-                // checar se param é válido
-                value = remove_chr(value, ';');
-                server.params[key] = value;
+    while (getline(file, token, '\n')) {
+        if (token.find("location") != std::string::npos && \
+            token.find("{") != std::string::npos) {
+            this->parseLocation(file, token, current_server);
+            continue;
+        }
+        if (token.find("}") != std::string::npos) {
+            std::vector<Config::Server::address_port>::iterator it;
+
+            it = current_server.listen.begin();
+            while (it != current_server.listen.end()) {
+                std::stringstream ss;
+                std::string port;
+                ss << it->port;
+                this->server[it->address + ":" + ss.str()] = current_server;
+                it++;
             }
+            return;
+        }
+        ft::trim(token);
+        param = ft::split(token, ' ');
+        if (param.size() == 0) {
+            continue;
+        }
+        it = current_server.params.find(param[0]);
+        if (it != current_server.params.end()) {
+            (current_server.*(it->second))(param);
+        } else {
+            std::cerr << "webserv: [emerg] param not found: '" << \
+                param[0] << "'" << std::endl;
         }
     }
-    std::cout << "ERROR!! Missing }:" << line << std::endl;
-    exit(-1);
+    std::cerr << "webserv: [emerg] syntax error server not closed" << std::endl;
 }
-void    ft::Config::httpContext(std::ifstream &configFile) {
-    std::string line, key, value;;
-    ft::Config::Server  server = Server();
 
+void ft::Config::parse(std::string path) {
+    std::ifstream file(path.c_str());
 
-    while (std::getline(configFile, line)) {
-        std::istringstream lineStream(line);
-        if (!line.empty()) {
-            if (line.find("server") != std::string::npos) {
-                server = serverContext(configFile);
-                this->server[server.params["listen"]] = server;
-            } else if (line.find("}") != std::string::npos) {
-                return;
-            } else {
-                lineStream >> key >> value;
-                // checar se param é válido
-                value = remove_chr(value, ';');
-                this->params[key] = value;
-            }
-        }
+    if (!file.is_open()) {
+        throw std::runtime_error("File not found");
     }
-    std::cout << "ERROR!! Missing }:" << line << std::endl;
-    exit(-1);
-}
 
-void ft::Config::load(std::ifstream &configFile) {
     std::string line;
+    while (getline(file, line)) {
+        std::istringstream iss(line);
+        std::string token;
 
-    while (std::getline(configFile, line)) {
-        if (!line.empty()) {
-            if (line.find("http") == std::string::npos) {
-                std::cout << "ERROR!! On line:" << line << std::endl;
-                return;
+        while (getline(iss, token, '\n')) {
+            if (token.find("server") != std::string::npos && \
+                token.find("{") != std::string::npos) {
+                parseServer(file);
             }
-            httpContext(configFile);
         }
     }
-    return;
-}
-
-ft::Config::Server const *ft::Config::getServer(std::string const host) const {
-    std::map<std::string, ft::Config::Server>::const_iterator it_server;
-
-    it_server = this->server.begin();
-    for (; it_server != this->server.end(); it_server++) {
-        if (!it_server->first.compare(host)) {
-            return (&it_server->second);
-        }
-    }
-    return NULL;
-}
-
-ft::Config::Location const *ft::Config::getLocation(std::string uri,
-    const ft::Config::Server &server) const {
-    std::map<std::string, ft::Config::Location>::const_iterator it_location;
-
-    it_location = server.location.begin();
-    for (; it_location != server.location.end(); it_location++) {
-        if (!it_location->first.compare(uri)) {
-            return (&it_location->second);
-        }
-    }
-    return NULL;
 }

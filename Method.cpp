@@ -7,9 +7,6 @@
 
 #include "./Method.hpp"
 
-#define DEF_PATH "./www"
-#define DEF_INDEX "index.html"
-
 ft::Method *ft::Method::getRequest(std::string method) {
     if (!method.compare("GET"))
         return new Get();
@@ -32,25 +29,27 @@ ft::Response    ft::Method::prepareResponse(
     return (ft::Response(HTTP_STATUS_OK, "", ""));
 }
 
-std::string getPath(const ft::Config::Server &server,
-    const ft::Config::Location &location, std::string param, std::string def) {
-    std::string str;
-    if (location.params.count(param))
-        return location.params.at(param);
-    else if (server.params.count(param))
-        return server.params.at(param);
-    return def;
-}
-
-std::string openAndReadFile(std::string filename) {
-    std::ifstream file(filename.c_str());
-    if (!file.is_open())
-        return ("");
+std::string openAndReadFile(ft::Config::Server const *server, const std::map<std::string, std::string> &header) {
+    std::string filename, index;
+    std::string root = server->root;
+    std::ifstream file;
     std::stringstream buffer;
 
-    buffer << file.rdbuf();
-    file.close();
-    return buffer.str();
+    for (size_t i = 0; i < server->index.size(); i++) {
+        index = server->index.at(i);
+        if (!header.at("Uri").compare("/")) {
+            filename = root + header.at("Uri") + index;
+        } else {
+            filename = root + header.at("Uri") + "/" + index;
+        }
+        std::ifstream file(filename.c_str());
+        if (!file.is_open()) {
+            buffer << file.rdbuf();
+            file.close();
+            return buffer.str();
+        }
+    }
+    return "";
 }
 
 std::string buildHeader(const std::string &buffer, std::string path) {
@@ -91,26 +90,19 @@ ft::Response ft::Get::buildResponse(
         return (response);
 
     ft::Config::Server const *server;
-    ft::Config::Location const *location;
+    ft::Config::Server::Location const *location;
     std::string root, file, path, responseHeader, buffer;
 
-    server = config.getServer(header.at("Host"));
+    server = &config.server.at(header.at("Host"));
     if (!server)
         return Response(HTTP_STATUS_BAD_REQUEST, "", "");
 
-    location = config.getLocation(header.at("Uri"), *server);
+    location = &server->location.at(header.at("Uri"));
     if (!location)
         return Response(HTTP_STATUS_NOT_FOUND, "", "");
 
-    root = getPath(*server, *location, "root", DEF_PATH);
-    file = getPath(*server, *location, "index", DEF_INDEX);
+    buffer = openAndReadFile(server, header);
 
-    if (!header.at("Uri").compare("/")) {
-        path = root + header.at("Uri") + file;
-    } else {
-        path = root + header.at("Uri") + "/" + file;
-    }
-    buffer = openAndReadFile(path);
     responseHeader = buildHeader(buffer, path);
     if (buffer.empty())
         return Response(HTTP_STATUS_NOT_FOUND, responseHeader, "");
