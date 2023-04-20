@@ -13,7 +13,7 @@
 namespace utils {
 
 std::string remove_chr(std::string str, char ch);
-void trim(std::string str);
+void trim(std::string &str);
 std::vector<std::string> split(std::string &str, char delimiter);
 
 }  // namespace Utils
