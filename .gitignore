@@ -36,4 +36,4 @@ webserv
 *.swp
 
 .vscode/
-
+.env
