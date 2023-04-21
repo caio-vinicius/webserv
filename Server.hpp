@@ -31,6 +31,7 @@ class Server {
     std::map<std::string, std::string> loadHeader(char *buffer);
     void loadBody(char *buffer);
     std::string buildResponse(std::string code, std::string phrase);
+    std::string getAddressByName(std::string name);
 
     Config _config;
     std::vector<int> _sockets;

@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <fcntl.h>
+#include <netdb.h>
 
 #include <cstdlib>
 #include <iostream>
@@ -24,12 +25,35 @@
 #include "./Response.hpp"
 #include "./Config.hpp"
 
+std::string ft::Server::getAddressByName(std::string name) {
+    struct addrinfo hints, *res;
+    int status;
+    char ipstr[INET6_ADDRSTRLEN];
+    std::string ip;
+
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+
+    if ((status = getaddrinfo(name.c_str(), NULL, &hints, &res)) != 0) {
+        std::cerr << "getaddrinfo: " << gai_strerror(status) << std::endl;
+        exit(1);
+    }
+
+    struct sockaddr_in *ipv4 = (struct sockaddr_in *)res->ai_addr;
+    void *addr = &(ipv4->sin_addr);
+    inet_ntop(res->ai_family, addr, ipstr, sizeof(ipstr));
+    ip = ipstr;
+    freeaddrinfo(res);
+    return (ip);
+}
+
 bool ft::quit = false;
 
 ft::Server::Server(void) {}
 
 ft::Server::Server(Config config): _config(config) {
-    std::map<std::string, ft::Config::Server>::iterator it_servers;
+    std::map<std::string, std::vector<ft::Config::Server> >::iterator it_servers;
     std::vector<int>::iterator it_sockets;
     struct sockaddr_in serv_addr;
     int sockfd;
@@ -42,47 +66,53 @@ ft::Server::Server(Config config): _config(config) {
     this->_sockaddrs.reserve(this->_config.server.size());
 
     it_servers = this->_config.server.begin();
-    for (; it_servers != this->_config.server.end(); it_servers++) {
-        sockfd = socket(AF_INET, SOCK_STREAM, 0);
-        if (sockfd < 0) {
-            std::cout << "Error opening socket" << std::endl;
-            exit(1);
-        }
-        fcntl(sockfd, F_SETFL, O_NONBLOCK);
-        opt = 1;
-        if (setsockopt(sockfd, SOL_SOCKET,
-                SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
-            perror("Erro ao abrir o setsockopt");
-            exit(1);
-        }
-        memset(&serv_addr, 0, sizeof(sockaddr_in));
-        serv_addr.sin_family = AF_INET;
-        serv_addr.sin_addr.s_addr = inet_addr(
-            it_servers->second.listen.at(0).address.c_str());
-        serv_addr.sin_port = htons((it_servers->second.listen.at(0).port));
-        if (bind(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr))) {
-            perror("Erro ao ligar o socket");
-            exit(1);
-        }
-        if (listen(sockfd, 5)) {
-            perror("Erro ao ligar o listen");
-            exit(1);
-        }
-        // std::cout << "Server listening on " << \
-        //     it_servers->second.listen.at(0).address;
-        // std::cout << ":" << \
-        //     it_servers->second.listen.at(0).port << std::endl;
-        this->_sockaddrs.push_back(serv_addr);
-        this->_sockets.push_back(sockfd);
-    }
 
-    // criando o que o poll precisa para funcionar
-    it_sockets = this->_sockets.begin();
-    for (; it_sockets != this->_sockets.end(); it_sockets++) {
-        pollfd fd;
-        fd.fd = *it_sockets;
-        fd.events = POLLIN;
-        this->_pollfds.push_back(fd);
+    // vector
+    std::map<uint16_t, std::string> saved_ports;
+    for (; it_servers != this->_config.server.end(); it_servers++) {
+        for(size_t i = 0; i < it_servers->second.at(0).listen.size(); i++) {
+            if (saved_ports.count(it_servers->second.at(0).listen.at(i).port)) {
+                continue ;
+            } else {
+                // do nothing
+            }
+            saved_ports[it_servers->second.at(0).listen.at(i).port] = "one";
+            sockfd = socket(AF_INET, SOCK_STREAM, 0);
+            if (sockfd < 0) {
+                std::cout << "Error opening socket" << std::endl;
+                exit(1);
+            }
+            fcntl(sockfd, F_SETFL, O_NONBLOCK);
+            opt = 1;
+            if (setsockopt(sockfd, SOL_SOCKET,
+                    SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
+                perror("Erro ao abrir o setsockopt");
+                exit(1);
+            }
+            memset(&serv_addr, 0, sizeof(sockaddr_in));
+            serv_addr.sin_family = AF_INET;
+            serv_addr.sin_addr.s_addr = inet_addr(
+                this->getAddressByName(it_servers->second.at(0).listen.at(i).address).c_str());
+            serv_addr.sin_port = htons((it_servers->second.at(0).listen.at(i).port));
+            if (bind(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr))) {
+                perror("Erro ao ligar o socket");
+                exit(1);
+            } else if (listen(sockfd, 5)) {
+                perror("Erro ao ligar o listen");
+                exit(1);
+            }
+            this->_sockaddrs.push_back(serv_addr);
+            this->_sockets.push_back(sockfd);
+        }
+
+        // criando o que o poll precisa para funcionar
+        it_sockets = this->_sockets.begin();
+        for (; it_sockets != this->_sockets.end(); it_sockets++) {
+            pollfd fd;
+            fd.fd = *it_sockets;
+            fd.events = POLLIN;
+            this->_pollfds.push_back(fd);
+        }
     }
 }
 

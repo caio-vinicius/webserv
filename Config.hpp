@@ -18,7 +18,7 @@ class Config {
     Config() {}
     ~Config() {}
     class Server;
-    std::map<std::string, Server> server;
+    std::map<std::string, std::vector<Server> > server;
     void parse(std::string path);
     void parseServer(std::ifstream &file);
     void parseLocation(std::ifstream &file, std::string &location_line, Server &server);
@@ -39,12 +39,12 @@ class Config::Server {
     std::map<std::string, Location> location;
     struct address_port {
         std::string address;
-        int port;
+        u_int16_t port;
     };
     std::vector<address_port> listen;
     std::vector<std::string> server_name;
     struct error_page_t {
-        std::vector<int> code;
+        std::vector<u_int16_t> code;
         std::string path;
     };
     error_page_t error_page;

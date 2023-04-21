@@ -93,7 +93,7 @@ ft::Response ft::Get::buildResponse(
     ft::Config::Server::Location const *location;
     std::string root, file, path, responseHeader, buffer;
 
-    server = &config.server.at(header.at("Host"));
+    server = &config.server.at(header.at("Host")).at(0);
     if (!server)
         return Response(HTTP_STATUS_BAD_REQUEST, "", "");
 

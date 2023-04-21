@@ -199,7 +199,7 @@ void ft::Config::parseServer(std::ifstream &file) {
                 std::stringstream ss;
                 std::string port;
                 ss << it->port;
-                this->server[it->address + ":" + ss.str()] = current_server;
+                this->server[it->address + ":" + ss.str()].push_back(current_server);
                 it++;
             }
             return;
