@@ -24,6 +24,7 @@ ft::Response    ft::Method::prepareResponse(
         return (ft::Response(HTTP_STATUS_BAD_REQUEST, "", ""));
     }
     if (header.at("Version").compare("HTTP/1.1")) {
+        std::cout << header.at("Version");
         return (ft::Response(HTTP_STATUS_HTTP_VERSION_NOT_SUPPORTED, "", ""));
     }
     return (ft::Response(HTTP_STATUS_OK, "", ""));
@@ -38,12 +39,12 @@ std::string openAndReadFile(ft::Config::Server const *server, const std::map<std
     for (size_t i = 0; i < server->index.size(); i++) {
         index = server->index.at(i);
         if (!header.at("Uri").compare("/")) {
-            filename = root + header.at("Uri") + index;
+            filename = "." + root + header.at("Uri") + index;
         } else {
-            filename = root + header.at("Uri") + "/" + index;
+            filename = "." + root + header.at("Uri") + "/" + index;
         }
         std::ifstream file(filename.c_str());
-        if (!file.is_open()) {
+        if (file.is_open()) {
             buffer << file.rdbuf();
             file.close();
             return buffer.str();
@@ -58,6 +59,8 @@ std::string buildHeader(const std::string &buffer, std::string path) {
     std::stringstream   ss;
 
     extension = path.substr(path.find_last_of(".") + 1);
+    std::cout << path << std::endl;
+    std::cout << extension << std::endl;
     std::map <std::string, std::string> mime_types;
     mime_types["html"] = "text/html";
     mime_types["css"] = "text/css";

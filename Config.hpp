@@ -29,36 +29,32 @@ class Config::Server {
     Server();
     ~Server() {};
 
-    std::string getRawPort() {
-        std::stringstream ss;
-        ss << listen.front().port;
-        return ss.str();
-    };
-    class Location;
     std::map<std::string, void(ft::Config::Server::*)(std::vector<std::string> &)> params;
-    std::map<std::string, Location> location;
-    struct address_port {
-        std::string address;
-        u_int16_t port;
-    };
-    std::vector<address_port> listen;
-    std::vector<std::string> server_name;
-    struct error_page_t {
-        std::vector<u_int16_t> code;
-        std::string path;
-    };
-    error_page_t error_page;
-    size_t client_max_body_size;
-    std::string root;
-    std::vector<std::string> index;
-
     void processListen(std::vector<std::string> &params);
     void processServerName(std::vector<std::string> &param);
     void processErrorPage(std::vector<std::string> &param);
     void processClientMaxBodySize(std::vector<std::string> &param);
     void processRoot(std::vector<std::string> &param);
     void processIndex(std::vector<std::string> &param);
- private:
+
+    class Location;
+    struct address_port {
+        std::string address;
+        u_int16_t port;
+    };
+    struct error_page_t {
+        std::vector<u_int16_t> code;
+        std::string path;
+    };
+
+    std::map<std::string, Location> location;
+    std::vector<address_port> listen;
+    std::vector<std::string> server_name;
+    error_page_t error_page;
+    size_t client_max_body_size;
+    std::string root;
+    std::vector<std::string> index;
+
 };  // Config::Server
 
 class Config::Server::Location {
@@ -72,7 +68,6 @@ class Config::Server::Location {
 
     std::string uri;
     bool autoindex;
- private:
 };  // class Config::Server::Location
 
 }  // namespace ft

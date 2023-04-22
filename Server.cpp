@@ -130,11 +130,10 @@ void requestLine(std::istringstream &ss,
     std::string line;
 
     std::getline(ss, request_line);
-
+    request_line = utils::remove_chr(request_line, 13);
     std::vector<std::string> vec = utils::split(request_line,  ' ');
-
     (*header)["Method"] = vec.at(0);
-    (*header)["URI"] = vec.at(1);
+    (*header)["Uri"] = vec.at(1);
     (*header)["Version"] = vec.at(2);
 }
 
@@ -182,9 +181,6 @@ void ft::Server::handleConnection(int client_fd) {
     } else {
         std::cout << "Getting response" << std::endl;
         ret = recv(client_fd, buffer, sizeof(buffer), 0);
-        std::cout << "ret: " << ret << std::endl;
-        std::cout << "buffer: " << buffer << std::endl;
-        std::cout << "Response recovered" << std::endl;
         if (ret < 0) {
             perror("Erro ao receber a mensagem");
             exit(1);
@@ -193,9 +189,6 @@ void ft::Server::handleConnection(int client_fd) {
             return;
         buffer[ret] = '\0';
         header = loadHeader(buffer);
-
-        std::cout << header["Uri"] << std::endl << std::endl;
-
         Method *req = ft::Method::getRequest(header["Method"]);
         ft::Response res = req->buildResponse(header, this->_config);
         send(client_fd, res.message().c_str(), res.message().size(), 0);

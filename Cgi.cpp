@@ -16,6 +16,7 @@ std::string toUpperUnderscore(std::string str) {
     return (result);
 }
 
+
 ft::Cgi::Cgi(std::string const path,
              std::map<std::string, std::string> env) {
     this->_path = path;

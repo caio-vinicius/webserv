@@ -24,3 +24,62 @@ The steps involved in establishing a socket on the client side are as follows:
 * Connect the socket to the address of the server using the connect() system call
 * Send and receive data
 
+# CONFIG FILE
+
+## How works
+```
+Syntax:     server { ... }
+Default:     —
+Context:     http
+
+Sets configuration for a virtual server.
+
+Syntax:     listen address[:port] ...
+Default:     listen *:80 | *:8000;
+Context:     server
+
+Sets the address and port for IP.
+
+Syntax:     server_name name ...;
+Default:     server_name _;
+Context:     server
+
+Sets names of a virtual server.
+
+Syntax:     error_page code ... uri;
+Default:     —
+Context:     server
+
+Defines the URI that will be shown for the specified errors.
+
+Syntax:     client_max_body_size size;
+Default:     client_max_body_size 1m;
+Context:     server
+
+Sets the maximum allowed size of the client request body.
+
+Syntax:     root path;
+Default:     root html;
+Context:     server
+
+Sets the root directory for requests.
+
+Syntax:     location uri { ... }
+Default:     /
+Context:     server
+
+Sets configuration depending on a request URI.
+
+Syntax:     index file ...;
+Default:     index index.html;
+Context:     server
+
+Defines files that will be used as an index.
+
+Syntax:     auto on | off;
+Default:     autoindex off;
+Context:     location
+
+Enables or disables the directory listing output.
+```
+
