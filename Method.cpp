@@ -30,30 +30,37 @@ ft::Response    ft::Method::prepareResponse(
     return (ft::Response(HTTP_STATUS_OK, "", ""));
 }
 
-std::string openAndReadFile(ft::Config::Server const *server, const std::map<std::string, std::string> &header) {
-    std::string filename, index;
-    std::string root = server->root;
-    std::ifstream file;
+std::string getPath(const std::map <std::string, std::string> &header,
+                    const std::string &root,
+                    const std::string &index) {
+    std::string path;
+    if (!header.at("Uri").compare("/")) {
+        path = "." + root + header.at("Uri") + index;
+    } else {
+        path = "." + root + header.at("Uri") + "/" + index;
+    }
+    return (path);
+}
+
+std::string openAndReadFile(ft::Config::Server const *server,
+                    const std::map<std::string, std::string> &header,
+                    std::string &path) {
     std::stringstream buffer;
 
-    for (size_t i = 0; i < server->index.size(); i++) {
-        index = server->index.at(i);
-        if (!header.at("Uri").compare("/")) {
-            filename = "." + root + header.at("Uri") + index;
-        } else {
-            filename = "." + root + header.at("Uri") + "/" + index;
-        }
-        std::ifstream file(filename.c_str());
+    std::vector<std::string>::const_iterator it = server->index.begin();
+    for (; it != server->index.end(); ++it) {
+        path = getPath(header, server->root, *it);
+        std::ifstream file(path.c_str());
         if (file.is_open()) {
             buffer << file.rdbuf();
             file.close();
-            return buffer.str();
+            return (buffer.str());
         }
     }
-    return "";
+    return ("");
 }
 
-std::string buildHeader(const std::string &buffer, std::string path) {
+std::string buildHeader(const std::string &buffer, std::string &path) {
     std::string extension;
     std::string header;
     std::stringstream   ss;
@@ -78,11 +85,11 @@ std::string buildHeader(const std::string &buffer, std::string path) {
 
     ss << buffer.length();
     header += "Server: 42webserv/1.0\r\n";
-    header += "Content-Lenght: " + ss.str() + "\r\n";
+    header += "Content-Length: " + ss.str() + "\r\n";
     header += "Content-Type: " + mime_types.at(extension) + "\r\n";
     // Do other stuff
     std::cout << header << "_____________________" << std::endl;
-    return header;
+    return (header);
 }
 
 ft::Response ft::Get::buildResponse(
@@ -99,17 +106,13 @@ ft::Response ft::Get::buildResponse(
     server = &config.server.at(header.at("Host")).at(0);
     if (!server)
         return Response(HTTP_STATUS_BAD_REQUEST, "", "");
-
     location = &server->location.at(header.at("Uri"));
     if (!location)
         return Response(HTTP_STATUS_NOT_FOUND, "", "");
-
-    buffer = openAndReadFile(server, header);
-
-    responseHeader = buildHeader(buffer, path);
+    buffer = openAndReadFile(server, header, path);
     if (buffer.empty())
         return Response(HTTP_STATUS_NOT_FOUND, responseHeader, "");
-
+    responseHeader = buildHeader(buffer, path);
     if (responseHeader.empty())
         return Response(HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE, "", "");
     return Response(HTTP_STATUS_OK, responseHeader, buffer);
