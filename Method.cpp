@@ -92,24 +92,39 @@ std::string buildHeader(const std::string &buffer, std::string &path) {
     return (header);
 }
 
+ft::Config::Server::Location *getLocation(ft::Config::Server *server, std::string uri) {
+    std::map<std::string, ft::Config::Server::Location>::iterator locationIt = server->location.begin();
+    ft::Config::Server::Location *currentLocation;
+
+    while (locationIt != server->location.end()) {
+        if (uri.find(locationIt->first) == 0) {
+            currentLocation = &(locationIt->second);
+        }
+        locationIt++;
+    }
+    return (currentLocation);
+}
+
 ft::Response ft::Get::buildResponse(
     const std::map<std::string, std::string> &header,
-    const ft::Config &config) {
+    ft::Config &config) {
     ft::Response response = prepareResponse(header);
     if (response._status_code_reason_phrase != HTTP_STATUS_OK)
         return (response);
 
-    ft::Config::Server const *server;
-    ft::Config::Server::Location const *location;
+    ft::Config::Server *server;
+    ft::Config::Server::Location *location;
     std::string root, file, path, responseHeader, buffer;
 
     server = &config.server.at(header.at("Host")).at(0);
     if (!server)
         return Response(HTTP_STATUS_BAD_REQUEST, "", "");
-    location = &server->location.at(header.at("Uri"));
+    location = getLocation(server, header.at("Uri"));
+    //std::cout << "location: " << location->uri << std::endl;
     if (!location)
         return Response(HTTP_STATUS_NOT_FOUND, "", "");
     buffer = openAndReadFile(server, header, path);
+    //std::cout << "path: " << path << std::endl;
     if (buffer.empty())
         return Response(HTTP_STATUS_NOT_FOUND, responseHeader, "");
     responseHeader = buildHeader(buffer, path);
@@ -120,7 +135,7 @@ ft::Response ft::Get::buildResponse(
 
 ft::Response ft::Post::buildResponse(
     const std::map<std::string, std::string> &header,
-    const ft::Config &config) {
+    ft::Config &config) {
     if (!header.count("Host")) {
         return Response(HTTP_STATUS_BAD_REQUEST, "", "");
     } else if (!header.count("Content-Length")) {
@@ -132,7 +147,7 @@ ft::Response ft::Post::buildResponse(
 
 ft::Response ft::Delete::buildResponse(
     const std::map<std::string, std::string> &header,
-    const ft::Config &config) {
+    ft::Config &config) {
     if (!header.count("Host")) {
         return Response(HTTP_STATUS_BAD_REQUEST, "", "");
     }
@@ -142,7 +157,7 @@ ft::Response ft::Delete::buildResponse(
 
 ft::Response ft::MethodNotAllowed::buildResponse(
     const std::map<std::string, std::string> &header,
-    const ft::Config &config) {
+    ft::Config &config) {
     (void)header;
     (void)config;
     return Response(HTTP_STATUS_METHOD_NOT_ALLOWED, "", "");

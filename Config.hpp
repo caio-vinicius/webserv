@@ -54,7 +54,7 @@ class Config::Server {
     size_t client_max_body_size;
     std::string root;
     std::vector<std::string> index;
-
+    bool default_server;
 };  // Config::Server
 
 class Config::Server::Location {

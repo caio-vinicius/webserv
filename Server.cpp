@@ -104,15 +104,14 @@ ft::Server::Server(Config config): _config(config) {
             this->_sockaddrs.push_back(serv_addr);
             this->_sockets.push_back(sockfd);
         }
-
-        // criando o que o poll precisa para funcionar
-        it_sockets = this->_sockets.begin();
-        for (; it_sockets != this->_sockets.end(); it_sockets++) {
-            pollfd fd;
-            fd.fd = *it_sockets;
-            fd.events = POLLIN;
-            this->_pollfds.push_back(fd);
-        }
+    }
+    // criando o que o poll precisa para funcionar
+    it_sockets = this->_sockets.begin();
+    for (; it_sockets != this->_sockets.end(); it_sockets++) {
+        pollfd fd;
+        fd.fd = *it_sockets;
+        fd.events = POLLIN;
+        this->_pollfds.push_back(fd);
     }
 }
 

@@ -35,6 +35,9 @@ ft::Config::Server::Server() {
     param.push_back("root");
     param.push_back("html");
     processRoot(param);
+
+    this->location["/"] = ft::Config::Server::Location();
+    this->default_server = false;
 }
 
 ft::Config::Server::Location::Location() {

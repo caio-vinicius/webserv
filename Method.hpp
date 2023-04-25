@@ -20,7 +20,7 @@ class Method {
         std::string> &header);
     virtual ft::Response buildResponse(
         const std::map<std::string, std::string> &header,
-        const ft::Config  &config) = 0;
+        ft::Config  &config) = 0;
     ~Method() {}
 };
 
@@ -29,7 +29,7 @@ class Get : public Method {
     Get() {}
     ft::Response buildResponse(
         const std::map<std::string, std::string> &header,
-        const ft::Config &config);
+        ft::Config &config);
     ~Get() {}
 };
 
@@ -38,7 +38,7 @@ class Post : public Method {
     Post() {}
     ft::Response buildResponse(
         const std::map<std::string, std::string> &header,
-        const ft::Config &config);
+        ft::Config &config);
     ~Post() {}
 };
 
@@ -47,7 +47,7 @@ class Delete : public Method {
     Delete() {}
     ft::Response buildResponse(
         const std::map<std::string, std::string> &header,
-        const ft::Config &config);
+        ft::Config &config);
     ~Delete() {}
 };
 
@@ -56,7 +56,7 @@ class MethodNotAllowed : public Method {
     MethodNotAllowed() {}
     ft::Response buildResponse(
         const std::map<std::string, std::string> &header,
-        const ft::Config &config);
+        ft::Config &config);
     ~MethodNotAllowed() {}
 };
 
