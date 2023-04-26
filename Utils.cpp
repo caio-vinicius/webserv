@@ -31,4 +31,27 @@ std::vector<std::string> split(std::string &str, char delimiter) {
     return (result);
 }
 
+
+std::string getAddress(std::string listen) {
+    std::string ip;
+    size_t pos = listen.find(":");
+    if (pos != std::string::npos) {
+        ip = listen.substr(0, pos);
+    }
+    return (ip);
+}
+
+int getPort(std::string listen) {
+    int n;
+    std::string port;
+    size_t pos = listen.find(":");
+    if (pos != std::string::npos) {
+        port = listen.substr(pos + 1);
+    }
+    std::istringstream stream(port);
+    stream >> n;
+    return (n);
+}
+
+
 }  // namespace utils

@@ -53,12 +53,11 @@ bool ft::quit = false;
 ft::Server::Server(void) {}
 
 ft::Server::Server(Config config): _config(config) {
-    std::map<std::string, std::vector<ft::Config::Server> >::iterator it_servers;
+    Config::iterator it_servers;
     std::vector<int>::iterator it_sockets;
     struct sockaddr_in serv_addr;
     int sockfd;
     int opt;
-
     std::cout << "Server created" << std::endl << std::endl;
 
     this->_sockets.reserve(this->_config.server.size());
@@ -67,43 +66,37 @@ ft::Server::Server(Config config): _config(config) {
 
     it_servers = this->_config.server.begin();
 
-    // vector
-    std::map<uint16_t, std::string> saved_ports;
     for (; it_servers != this->_config.server.end(); it_servers++) {
-        for(size_t i = 0; i < it_servers->second.at(0).listen.size(); i++) {
-            if (saved_ports.count(it_servers->second.at(0).listen.at(i).port)) {
-                continue ;
-            } else {
-                // do nothing
-            }
-            saved_ports[it_servers->second.at(0).listen.at(i).port] = "one";
-            sockfd = socket(AF_INET, SOCK_STREAM, 0);
-            if (sockfd < 0) {
-                std::cout << "Error opening socket" << std::endl;
-                exit(1);
-            }
-            fcntl(sockfd, F_SETFL, O_NONBLOCK);
-            opt = 1;
-            if (setsockopt(sockfd, SOL_SOCKET,
-                    SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
-                perror("Erro ao abrir o setsockopt");
-                exit(1);
-            }
-            memset(&serv_addr, 0, sizeof(sockaddr_in));
-            serv_addr.sin_family = AF_INET;
-            serv_addr.sin_addr.s_addr = inet_addr(
-                this->getAddressByName(it_servers->second.at(0).listen.at(i).address).c_str());
-            serv_addr.sin_port = htons((it_servers->second.at(0).listen.at(i).port));
-            if (bind(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr))) {
-                perror("Erro ao ligar o socket");
-                exit(1);
-            } else if (listen(sockfd, 5)) {
-                perror("Erro ao ligar o listen");
-                exit(1);
-            }
-            this->_sockaddrs.push_back(serv_addr);
-            this->_sockets.push_back(sockfd);
+        sockfd = socket(AF_INET, SOCK_STREAM, 0);
+        if (sockfd < 0) {
+            std::cout << "Error opening socket" << std::endl;
+            exit(1);
         }
+        fcntl(sockfd, F_SETFL, O_NONBLOCK);
+        opt = 1;
+        if (setsockopt(sockfd, SOL_SOCKET,
+                SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
+            perror("Erro ao abrir o setsockopt");
+            exit(1);
+        }
+
+        memset(&serv_addr, 0, sizeof(sockaddr_in));
+        serv_addr.sin_family = AF_INET;
+        std::string listen_t = utils::getAddress(it_servers->first);
+        int port = utils::getPort(it_servers->first);
+        std::cout << listen_t << "--" << port << std::endl;
+        serv_addr.sin_addr.s_addr = inet_addr(
+            this->getAddressByName(listen_t).c_str());
+        serv_addr.sin_port = htons(port);
+        if (bind(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr))) {
+            perror("Erro ao ligar o socket");
+            exit(1);
+        } else if (listen(sockfd, 5)) {
+            perror("Erro ao ligar o listen");
+            exit(1);
+        }
+        this->_sockaddrs.push_back(serv_addr);
+        this->_sockets.push_back(sockfd);
     }
     // criando o que o poll precisa para funcionar
     it_sockets = this->_sockets.begin();
@@ -201,17 +194,18 @@ ft::Server::client_fd ft::Server::waitConnections() {
     size_t i = 0;
     socklen_t clilen;
 
-    ret = poll(&this->_pollfds[0], this->_config.server.size(), -1);
+    ret = poll(&this->_pollfds[0], this->_pollfds.size(), -1);
     if (ret == -1) {
         std::cout << "Error" << std::endl;
     } else if (ret == 0) {
         std::cout << "Timeout" << std::endl;
     }
-    while (i < this->_config.server.size()) {
+    while (i < this->_pollfds.size()) {
         if (this->_pollfds[i].revents & POLLIN) {
+            sockaddr_in address;
+            socklen_t address_len = sizeof(address);
             clilen = sizeof(this->_sockaddrs[i]);
-            client_fd = accept(this->_sockets[i], \
-                (struct sockaddr *)&this->_sockaddrs[i], &clilen);
+            client_fd = accept(this->_sockets[i], (sockaddr *) &address, &address_len);
             return (client_fd);
         }
         i++;

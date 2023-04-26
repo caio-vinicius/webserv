@@ -15,10 +15,15 @@ namespace ft {
 
 class Config {
  public:
+    class Server;
+
     Config() {}
     ~Config() {}
-    class Server;
-    std::map<std::string, std::vector<Server> > server;
+
+    typedef std::map<std::string, std::vector<Server> >::iterator iterator;
+    typedef std::map<std::string, std::vector<Server> > servers;
+    servers server;
+
     void parse(std::string path);
     void parseServer(std::ifstream &file);
     void parseLocation(std::ifstream &file, std::string &location_line, Server &server);
@@ -42,6 +47,7 @@ class Config::Server {
         std::string address;
         u_int16_t port;
     };
+
     struct error_page_t {
         std::vector<u_int16_t> code;
         std::string path;
@@ -49,6 +55,7 @@ class Config::Server {
 
     std::map<std::string, Location> location;
     std::vector<address_port> listen;
+    typedef std::vector<address_port> listens;
     std::vector<std::string> server_name;
     error_page_t error_page;
     size_t client_max_body_size;
