@@ -15,8 +15,8 @@ namespace utils {
 std::string remove_chr(std::string str, char ch);
 void trim(std::string &str);
 std::vector<std::string> split(std::string &str, char delimiter);
-std::string getAddress(std::string listen);
-int getPort(std::string listen);
+std::string getAddress(std::string listen_t);
+int getPort(std::string listen_t);
 
 }  // namespace Utils
 

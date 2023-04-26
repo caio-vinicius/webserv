@@ -25,6 +25,100 @@
 #include "./Response.hpp"
 #include "./Config.hpp"
 
+
+ft::Server::Server(Config config): _config(config) {
+
+    std::cout << "Server created" << std::endl << std::endl;
+
+    ft::Config::servers server = config.server;
+    this->_sockets = this->createSockets(server);
+}
+
+ft::Server::~Server() {
+    std::vector<int>::iterator it = this->_sockets.begin();
+    for (; it != this->_sockets.end(); it++) {
+        close(*it);
+    }
+    std::cout << "Server destroyed" << std::endl;
+}
+
+void handle_signal(int) {
+    ft::quit = true;
+}
+
+void ft::Server::run() {
+    int client_fd;
+    struct sigaction sa;
+
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = handle_signal;
+    sigaction(SIGINT, &sa, NULL);
+
+    while (!ft::quit) {
+        client_fd = this->waitConnections();
+        if (client_fd > 0) {
+            this->handleConnection(client_fd);
+        }
+    }
+    std::cout << "Server stopped" << std::endl;
+}
+
+
+void ft::Server::handleConnection(int client_fd) {
+    int ret;
+    char buffer[8192];  // 8K buffer
+    std::map<std::string, std::string> header;
+
+    if (client_fd < 0) {
+        perror("Erro ao aceitar o cliente");
+        exit(1);
+    } else {
+        std::cout << "Getting response" << std::endl;
+        ret = recv(client_fd, buffer, sizeof(buffer), 0);
+        if (ret < 0) {
+            perror("Erro ao receber a mensagem");
+            exit(1);
+        }
+        if (ret == 0)
+            return;
+        buffer[ret] = '\0';
+        header = loadHeader(buffer);
+        Method *req = ft::Method::getRequest(header["Method"]);
+        ft::Response res = req->buildResponse(header, this->_config);
+        send(client_fd, res.message().c_str(), res.message().size(), 0);
+        close(client_fd);
+    }
+}
+
+ft::Server::client_fd ft::Server::waitConnections() {
+    int ret;
+    int client_fd;
+
+    std::vector<pollfd> pfds;
+    for (std::vector<int>::iterator it_sockets = this->_sockets.begin();
+        it_sockets != this->_sockets.end(); it_sockets++) {
+        pollfd fd;
+        fd.fd = *it_sockets;
+        fd.events = POLLIN;
+        pfds.push_back(fd);
+    }
+    ret = poll(&pfds[0], pfds.size(), -1);
+    if (ret == -1) {
+        std::cout << "Error" << std::endl;
+    } else if (ret == 0) {
+        std::cout << "Timeout" << std::endl;
+    }
+    for (size_t i = 0; i < pfds.size(); i++) {
+        if (pfds[i].revents & POLLIN) {
+            sockaddr_in address;
+            socklen_t address_len = sizeof(address);
+            client_fd = accept(this->_sockets[i], (sockaddr *) &address, &address_len);
+            return (client_fd);
+        }
+    }
+    return (0);
+}
+
 std::string ft::Server::getAddressByName(std::string name) {
     struct addrinfo hints, *res;
     int status;
@@ -52,68 +146,41 @@ bool ft::quit = false;
 
 ft::Server::Server(void) {}
 
-ft::Server::Server(Config config): _config(config) {
-    Config::iterator it_servers;
-    std::vector<int>::iterator it_sockets;
-    struct sockaddr_in serv_addr;
-    int sockfd;
-    int opt;
-    std::cout << "Server created" << std::endl << std::endl;
-
-    this->_sockets.reserve(this->_config.server.size());
-    this->_pollfds.reserve(this->_config.server.size());
-    this->_sockaddrs.reserve(this->_config.server.size());
-
-    it_servers = this->_config.server.begin();
-
-    for (; it_servers != this->_config.server.end(); it_servers++) {
-        sockfd = socket(AF_INET, SOCK_STREAM, 0);
-        if (sockfd < 0) {
+std::vector<int> ft::Server::createSockets( Config::servers server ) {
+    std::vector<int> sockets;
+    for (Config::iterator it = server.begin() ; it != server.end(); it++) {
+        int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+        if (socket_fd < 0) {
             std::cout << "Error opening socket" << std::endl;
             exit(1);
         }
-        fcntl(sockfd, F_SETFL, O_NONBLOCK);
-        opt = 1;
-        if (setsockopt(sockfd, SOL_SOCKET,
+        fcntl(socket_fd, F_SETFL, O_NONBLOCK);
+        int opt = 1;
+        if (setsockopt(socket_fd, SOL_SOCKET,
                 SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
             perror("Erro ao abrir o setsockopt");
             exit(1);
         }
 
+        struct sockaddr_in serv_addr;
+        std::string listen_t = utils::getAddress(it->first);
+        int port = utils::getPort(it->first);
+
         memset(&serv_addr, 0, sizeof(sockaddr_in));
         serv_addr.sin_family = AF_INET;
-        std::string listen_t = utils::getAddress(it_servers->first);
-        int port = utils::getPort(it_servers->first);
-        std::cout << listen_t << "--" << port << std::endl;
         serv_addr.sin_addr.s_addr = inet_addr(
             this->getAddressByName(listen_t).c_str());
         serv_addr.sin_port = htons(port);
-        if (bind(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr))) {
+        if (bind(socket_fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr))) {
             perror("Erro ao ligar o socket");
             exit(1);
-        } else if (listen(sockfd, 5)) {
+        } else if (listen(socket_fd, 5)) {
             perror("Erro ao ligar o listen");
             exit(1);
         }
-        this->_sockaddrs.push_back(serv_addr);
-        this->_sockets.push_back(sockfd);
+        sockets.push_back(socket_fd);
     }
-    // criando o que o poll precisa para funcionar
-    it_sockets = this->_sockets.begin();
-    for (; it_sockets != this->_sockets.end(); it_sockets++) {
-        pollfd fd;
-        fd.fd = *it_sockets;
-        fd.events = POLLIN;
-        this->_pollfds.push_back(fd);
-    }
-}
-
-ft::Server::~Server() {
-    std::vector<int>::iterator it = this->_sockets.begin();
-    for (; it != this->_sockets.end(); it++) {
-        close(*it);
-    }
-    std::cout << "Server destroyed" << std::endl;
+    return (sockets);
 }
 
 void requestLine(std::istringstream &ss,
@@ -128,6 +195,7 @@ void requestLine(std::istringstream &ss,
     (*header)["Uri"] = vec.at(1);
     (*header)["Version"] = vec.at(2);
 }
+
 
 std::map<std::string, std::string> ft::Server::loadHeader(char *buffer) {
     std::map<std::string, std::string> header;
@@ -160,77 +228,4 @@ void ft::Server::loadBody(char *buffer) {
             break;
         }
     }
-}
-
-void ft::Server::handleConnection(int client_fd) {
-    int ret;
-    char buffer[8192];  // 8K buffer
-    std::map<std::string, std::string> header;
-
-    if (client_fd < 0) {
-        perror("Erro ao aceitar o cliente");
-        exit(1);
-    } else {
-        std::cout << "Getting response" << std::endl;
-        ret = recv(client_fd, buffer, sizeof(buffer), 0);
-        if (ret < 0) {
-            perror("Erro ao receber a mensagem");
-            exit(1);
-        }
-        if (ret == 0)
-            return;
-        buffer[ret] = '\0';
-        header = loadHeader(buffer);
-        Method *req = ft::Method::getRequest(header["Method"]);
-        ft::Response res = req->buildResponse(header, this->_config);
-        send(client_fd, res.message().c_str(), res.message().size(), 0);
-        close(client_fd);
-    }
-}
-
-ft::Server::client_fd ft::Server::waitConnections() {
-    int ret;
-    int client_fd;
-    size_t i = 0;
-    socklen_t clilen;
-
-    ret = poll(&this->_pollfds[0], this->_pollfds.size(), -1);
-    if (ret == -1) {
-        std::cout << "Error" << std::endl;
-    } else if (ret == 0) {
-        std::cout << "Timeout" << std::endl;
-    }
-    while (i < this->_pollfds.size()) {
-        if (this->_pollfds[i].revents & POLLIN) {
-            sockaddr_in address;
-            socklen_t address_len = sizeof(address);
-            clilen = sizeof(this->_sockaddrs[i]);
-            client_fd = accept(this->_sockets[i], (sockaddr *) &address, &address_len);
-            return (client_fd);
-        }
-        i++;
-    }
-    return (0);
-}
-
-
-void handle_signal(int) {
-    ft::quit = true;
-}
-
-void ft::Server::run() {
-    int client_fd;
-    struct sigaction sa;
-
-    memset(&sa, 0, sizeof(sa));
-    sa.sa_handler = handle_signal;
-    sigaction(SIGINT, &sa, NULL);
-
-    while (!ft::quit) {
-        client_fd = this->waitConnections();
-        if (client_fd > 0) {
-            this->handleConnection(client_fd);
-        }
-    }
-    std::cout << "Server stopped" << std::endl;
 }

@@ -19,7 +19,6 @@ class Config {
 
     Config() {}
     ~Config() {}
-
     typedef std::map<std::string, std::vector<Server> >::iterator iterator;
     typedef std::map<std::string, std::vector<Server> > servers;
     servers server;

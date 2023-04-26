@@ -32,21 +32,21 @@ std::vector<std::string> split(std::string &str, char delimiter) {
 }
 
 
-std::string getAddress(std::string listen) {
+std::string getAddress(std::string listen_t) {
     std::string ip;
-    size_t pos = listen.find(":");
+    size_t pos = listen_t.find(":");
     if (pos != std::string::npos) {
-        ip = listen.substr(0, pos);
+        ip = listen_t.substr(0, pos);
     }
     return (ip);
 }
 
-int getPort(std::string listen) {
+int getPort(std::string listen_t) {
     int n;
     std::string port;
-    size_t pos = listen.find(":");
+    size_t pos = listen_t.find(":");
     if (pos != std::string::npos) {
-        port = listen.substr(pos + 1);
+        port = listen_t.substr(pos + 1);
     }
     std::istringstream stream(port);
     stream >> n;

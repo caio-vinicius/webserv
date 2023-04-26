@@ -32,11 +32,10 @@ class Server {
     void loadBody(char *buffer);
     std::string buildResponse(std::string code, std::string phrase);
     std::string getAddressByName(std::string name);
+    std::vector<int> createSockets( Config::servers server ) ;
 
     Config _config;
     std::vector<int> _sockets;
-    std::vector<struct pollfd> _pollfds;
-    std::vector<struct sockaddr_in> _sockaddrs;
 };  // class Server
 
 }  // namespace ft
