@@ -27,7 +27,6 @@
 
 
 ft::Server::Server(Config config): _config(config) {
-
     std::cout << "Server created" << std::endl << std::endl;
 
     ft::Config::servers server = config.server;
@@ -47,7 +46,7 @@ void handle_signal(int) {
 }
 
 void ft::Server::run() {
-    int client_fd;
+    int client_fd, server_fd;
     struct sigaction sa;
 
     memset(&sa, 0, sizeof(sa));
@@ -55,19 +54,20 @@ void ft::Server::run() {
     sigaction(SIGINT, &sa, NULL);
 
     while (!ft::quit) {
-        client_fd = this->waitConnections();
+        this->waitConnections(&client_fd, &server_fd);
         if (client_fd > 0) {
-            this->handleConnection(client_fd);
+            this->handleConnection(client_fd, server_fd);
         }
     }
     std::cout << "Server stopped" << std::endl;
 }
 
 
-void ft::Server::handleConnection(int client_fd) {
+void ft::Server::handleConnection(int client_fd, int server_fd) {
     int ret;
     char buffer[8192];  // 8K buffer
     std::map<std::string, std::string> header;
+    ft::Config::Server  *server;
 
     if (client_fd < 0) {
         perror("Erro ao aceitar o cliente");
@@ -83,16 +83,23 @@ void ft::Server::handleConnection(int client_fd) {
             return;
         buffer[ret] = '\0';
         header = loadHeader(buffer);
-        Method *req = ft::Method::getRequest(header["Method"]);
-        ft::Response res = req->buildResponse(header, this->_config);
-        send(client_fd, res.message().c_str(), res.message().size(), 0);
+
+        try {
+            server = getServer(server_fd, &header);
+            Method *req = ft::Method::getRequest(header["Method"]);
+            ft::Response res = req->buildResponse(header, server);
+            send(client_fd, res.message().c_str(), res.message().size(), 0);
+        } catch (std::exception) {
+            ft::Response res = Response(HTTP_STATUS_BAD_REQUEST, "", "");
+            send(client_fd, res.message().c_str(), res.message().size(), 0);
+        }
+
         close(client_fd);
     }
 }
 
-ft::Server::client_fd ft::Server::waitConnections() {
+void    ft::Server::waitConnections(int *client_fd, int *server_fd) {
     int ret;
-    int client_fd;
 
     std::vector<pollfd> pfds;
     for (std::vector<int>::iterator it_sockets = this->_sockets.begin();
@@ -112,11 +119,12 @@ ft::Server::client_fd ft::Server::waitConnections() {
         if (pfds[i].revents & POLLIN) {
             sockaddr_in address;
             socklen_t address_len = sizeof(address);
-            client_fd = accept(this->_sockets[i], (sockaddr *) &address, &address_len);
-            return (client_fd);
+            *server_fd = this->_sockets[i];
+            *client_fd = accept(this->_sockets[i],
+                reinterpret_cast<sockaddr *>(&address), &address_len);
+            return;
         }
     }
-    return (0);
 }
 
 std::string ft::Server::getAddressByName(std::string name) {
@@ -146,7 +154,7 @@ bool ft::quit = false;
 
 ft::Server::Server(void) {}
 
-std::vector<int> ft::Server::createSockets( Config::servers server ) {
+std::vector<int> ft::Server::createSockets(Config::servers server) {
     std::vector<int> sockets;
     for (Config::iterator it = server.begin() ; it != server.end(); it++) {
         int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -179,6 +187,9 @@ std::vector<int> ft::Server::createSockets( Config::servers server ) {
             exit(1);
         }
         sockets.push_back(socket_fd);
+        for (size_t i = 0; i < it->second.size(); i++) {
+            this->_config.server.at(it->first).at(i).fd = socket_fd;
+        }
     }
     return (sockets);
 }
@@ -190,15 +201,15 @@ void requestLine(std::istringstream &ss,
 
     std::getline(ss, request_line);
     request_line = utils::remove_chr(request_line, '\r');
-    std::vector<std::string> vec = utils::split(request_line,  ' ');
+    std::vector<std::string> vec = utils::split(&request_line,  ' ');
     (*header)["Method"] = vec.at(0);
     (*header)["Uri"] = vec.at(1);
     (*header)["Version"] = vec.at(2);
 }
 
 
-std::map<std::string, std::string> ft::Server::loadHeader(char *buffer) {
-    std::map<std::string, std::string> header;
+ft::Server::header_type ft::Server::loadHeader(char *buffer) {
+    ft::Server::header_type header;
     std::string line;
     std::string str(buffer);
     std::istringstream ss(str);
@@ -228,4 +239,30 @@ void ft::Server::loadBody(char *buffer) {
             break;
         }
     }
+}
+
+ft::Config::Server *ft::Server::getServer(int server_fd,
+    std::map<std::string, std::string> *header) {
+    ft::Config::iterator    it;
+
+    if (!header->count("Host") || header->at("Host").empty())
+        throw std::exception();
+
+    for (it = this->_config.server.begin();
+        it != this->_config.server.end(); it++) {
+        if (it->second.at(0).fd == server_fd)
+            break;
+    }
+
+    if (header->at("Host").compare(it->first) && it->second.size() > 1) {
+        for (size_t i = 0; i < it->second.size(); i++) {
+            if (std::find(it->second.at(i).server_name.begin(),
+                it->second.at(i).server_name.end(),
+                header->at("Host")) != it->second.at(i).server_name.end())
+                return &it->second.at(i);
+        }
+    }
+
+    // Lógica para Default_Server
+    return &it->second.at(0);
 }

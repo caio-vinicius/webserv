@@ -7,6 +7,7 @@
 #include <string>
 #include <map>
 #include <iostream>
+#include <cstring>
 
 #include "./Response.hpp"
 #include "./Config.hpp"
@@ -20,7 +21,7 @@ class Method {
         std::string> &header);
     virtual ft::Response buildResponse(
         const std::map<std::string, std::string> &header,
-        ft::Config  &config) = 0;
+        ft::Config::Server *server) = 0;
     ~Method() {}
 };
 
@@ -29,7 +30,7 @@ class Get : public Method {
     Get() {}
     ft::Response buildResponse(
         const std::map<std::string, std::string> &header,
-        ft::Config &config);
+        ft::Config::Server *server);
     ~Get() {}
 };
 
@@ -38,7 +39,7 @@ class Post : public Method {
     Post() {}
     ft::Response buildResponse(
         const std::map<std::string, std::string> &header,
-        ft::Config &config);
+        ft::Config::Server *server);
     ~Post() {}
 };
 
@@ -47,7 +48,7 @@ class Delete : public Method {
     Delete() {}
     ft::Response buildResponse(
         const std::map<std::string, std::string> &header,
-        ft::Config &config);
+        ft::Config::Server *server);
     ~Delete() {}
 };
 
@@ -56,7 +57,7 @@ class MethodNotAllowed : public Method {
     MethodNotAllowed() {}
     ft::Response buildResponse(
         const std::map<std::string, std::string> &header,
-        ft::Config &config);
+        ft::Config::Server *server);
     ~MethodNotAllowed() {}
 };
 

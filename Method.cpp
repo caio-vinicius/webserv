@@ -42,7 +42,7 @@ std::string getPath(const std::map <std::string, std::string> &header,
     return (path);
 }
 
-std::string openAndReadFile(ft::Config::Server const *server,
+std::string openAndReadFile(ft::Config::Server *server,
                     const std::map<std::string, std::string> &header,
                     std::string &path) {
     std::stringstream buffer;
@@ -92,10 +92,12 @@ std::string buildHeader(const std::string &buffer, std::string &path) {
     return (header);
 }
 
-ft::Config::Server::Location *getLocation(ft::Config::Server *server, std::string uri) {
-    std::map<std::string, ft::Config::Server::Location>::iterator locationIt = server->location.begin();
+ft::Config::Server::Location *getLocation(ft::Config::Server *server,
+    std::string uri) {
+    std::map<std::string, ft::Config::Server::Location>::iterator locationIt;
     ft::Config::Server::Location *currentLocation;
 
+    locationIt = server->location.begin();
     while (locationIt != server->location.end()) {
         if (uri.find(locationIt->first) == 0) {
             currentLocation = &(locationIt->second);
@@ -107,58 +109,52 @@ ft::Config::Server::Location *getLocation(ft::Config::Server *server, std::strin
 
 ft::Response ft::Get::buildResponse(
     const std::map<std::string, std::string> &header,
-    ft::Config &config) {
+    ft::Config::Server *server) {
     ft::Response response = prepareResponse(header);
+
     if (response._status_code_reason_phrase != HTTP_STATUS_OK)
         return (response);
 
-    ft::Config::Server *server;
     ft::Config::Server::Location *location;
-    std::string root, file, path, responseHeader, buffer;
+    std::string responseHeader, buffer, path;
 
-    server = &config.server.at(header.at("Host")).at(0);
-    if (!server)
-        return Response(HTTP_STATUS_BAD_REQUEST, "", "");
     location = getLocation(server, header.at("Uri"));
-    //std::cout << "location: " << location->uri << std::endl;
     if (!location)
         return Response(HTTP_STATUS_NOT_FOUND, "", "");
+
     buffer = openAndReadFile(server, header, path);
-    //std::cout << "path: " << path << std::endl;
     if (buffer.empty())
         return Response(HTTP_STATUS_NOT_FOUND, responseHeader, "");
+
     responseHeader = buildHeader(buffer, path);
     if (responseHeader.empty())
         return Response(HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE, "", "");
+
     return Response(HTTP_STATUS_OK, responseHeader, buffer);
 }
 
 ft::Response ft::Post::buildResponse(
     const std::map<std::string, std::string> &header,
-    ft::Config &config) {
-    if (!header.count("Host")) {
-        return Response(HTTP_STATUS_BAD_REQUEST, "", "");
-    } else if (!header.count("Content-Length")) {
+    ft::Config::Server *server) {
+    if (!header.count("Content-Length")) {
         return Response(HTTP_STATUS_LENGTH_REQUIRED, "", "");
     }
-    (void)config;
+    (void)server;
     return Response(HTTP_STATUS_CREATED, "", "");
 }
 
 ft::Response ft::Delete::buildResponse(
     const std::map<std::string, std::string> &header,
-    ft::Config &config) {
-    if (!header.count("Host")) {
-        return Response(HTTP_STATUS_BAD_REQUEST, "", "");
-    }
-    (void)config;
+    ft::Config::Server *server) {
+    (void)server;
+    (void)header;
     return Response(HTTP_STATUS_ACCEPTED, "", "");
 }
 
 ft::Response ft::MethodNotAllowed::buildResponse(
     const std::map<std::string, std::string> &header,
-    ft::Config &config) {
+    ft::Config::Server *server) {
     (void)header;
-    (void)config;
+    (void)server;
     return Response(HTTP_STATUS_METHOD_NOT_ALLOWED, "", "");
 }
