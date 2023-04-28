@@ -259,10 +259,10 @@ ft::Config::Server *ft::Server::getServer(int server_fd,
             if (std::find(it->second.at(i).server_name.begin(),
                 it->second.at(i).server_name.end(),
                 header->at("Host")) != it->second.at(i).server_name.end())
-                return &it->second.at(i);
+                return (&it->second.at(i));
         }
     }
 
     // Lógica para Default_Server
-    return &it->second.at(0);
+    return (&it->second.at(0));
 }

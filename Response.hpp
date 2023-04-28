@@ -7,6 +7,8 @@
 #include <cstddef>
 #include <string>
 
+#include "./Config.hpp"
+
 #define HTTP_VERSION "HTTP/1.1"
 #define HTTP_STATUS_NULL "000"
 #define HTTP_STATUS_OK "200 OK"
@@ -45,7 +47,6 @@
 #define HTTP_STATUS_GATEWAY_TIMEOUT "504 Gateway Timeout"
 #define HTTP_STATUS_HTTP_VERSION_NOT_SUPPORTED "505 HTTP Version Not Supported"
 #define HTTP_STATUS_INSUFFICIENT_STORAGE "507 Insufficient Storage"
-
 
 namespace ft {
 class Response {

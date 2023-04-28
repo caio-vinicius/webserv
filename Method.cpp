@@ -4,6 +4,8 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+//CHECK
+#include <algorithm>
 
 #include "./Method.hpp"
 
@@ -30,26 +32,28 @@ ft::Response    ft::Method::prepareResponse(
     return (ft::Response(HTTP_STATUS_OK, "", ""));
 }
 
-std::string getPath(const std::map <std::string, std::string> &header,
+std::string getPath(//const std::map <std::string, std::string> &header,
+                    const std::string &uri,
                     const std::string &root,
                     const std::string &index) {
     std::string path;
-    if (!header.at("Uri").compare("/")) {
-        path = "." + root + header.at("Uri") + index;
+    if (!uri.compare("/")) {
+        path = "." + root + uri + index;
     } else {
-        path = "." + root + header.at("Uri") + "/" + index;
+        path = "." + root + uri + "/" + index;
     }
     return (path);
 }
 
 std::string openAndReadFile(ft::Config::Server *server,
-                    const std::map<std::string, std::string> &header,
+                    //const std::map<std::string, std::string> &header,
+                    const std::string &uri,
                     std::string &path) {
     std::stringstream buffer;
 
     std::vector<std::string>::const_iterator it = server->index.begin();
     for (; it != server->index.end(); ++it) {
-        path = getPath(header, server->root, *it);
+        path = getPath(uri, server->root, *it);
         std::ifstream file(path.c_str());
         if (file.is_open()) {
             buffer << file.rdbuf();
@@ -107,10 +111,46 @@ ft::Config::Server::Location *getLocation(ft::Config::Server *server,
     return (currentLocation);
 }
 
+ft::Response makeResponse(const char *status_code_reason_phrase,
+                    const std::string &uri,
+                    ft::Config::Server *server)
+{
+    std::string body, path, header, code;
+    int code_int;
+
+    std::cout << "error page code: " << server->error_page.code[0] << std::endl;
+    std::cout << "error page path: " << server->error_page.path << std::endl;
+
+    std::string code_phrase = std::string(status_code_reason_phrase);
+    code = code_phrase.substr(0, code_phrase.find(" "));
+    //phrase = code_phrase.substr(code_phrase.find(" ") + 1);
+    code_int = std::atoi(code.c_str());
+
+    if (std::find(server->error_page.code.begin(), server->error_page.code.end(), code_int) != server->error_page.code.end()) {
+        path = "." + server->root + "/" + server->error_page.path;
+        std::cout << "path: " << path << std::endl;
+        std::ifstream file(path.c_str());
+        if (file.is_open()) {
+            std::stringstream buffer;
+            buffer << file.rdbuf();
+            file.close();
+            body = buffer.str();
+        }
+    } else {
+        body = openAndReadFile(server, uri, path);
+    }
+
+    header = buildHeader(body, path);
+
+    return ft::Response(status_code_reason_phrase, header, body);
+}
+
 ft::Response ft::Get::buildResponse(
     const std::map<std::string, std::string> &header,
     ft::Config::Server *server) {
     ft::Response response = prepareResponse(header);
+
+    return (makeResponse(HTTP_STATUS_OK, header.at("Uri"), server));
 
     if (response._status_code_reason_phrase != HTTP_STATUS_OK)
         return (response);
@@ -122,7 +162,7 @@ ft::Response ft::Get::buildResponse(
     if (!location)
         return Response(HTTP_STATUS_NOT_FOUND, "", "");
 
-    buffer = openAndReadFile(server, header, path);
+    buffer = openAndReadFile(server, header.at("Uri"), path);
     if (buffer.empty())
         return Response(HTTP_STATUS_NOT_FOUND, responseHeader, "");
 
