@@ -90,7 +90,9 @@ void ft::Server::handleConnection(int client_fd, int server_fd) {
             ft::Response res = req->buildResponse(header, server);
             send(client_fd, res.message().c_str(), res.message().size(), 0);
         } catch (std::exception) {
-            ft::Response res = Response(HTTP_STATUS_BAD_REQUEST, "", "");
+            std::string path;
+            std::string body = ImNotOk(server, path);
+            ft::Response res = Response(HTTP_STATUS_BAD_REQUEST, "", body);
             send(client_fd, res.message().c_str(), res.message().size(), 0);
         }
 

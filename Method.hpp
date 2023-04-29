@@ -62,5 +62,7 @@ class MethodNotAllowed : public Method {
 };
 
 }  // namespace ft
+std::string ImNotOk(ft::Config::Server *server, std::string &path);
+
 
 #endif  // METHOD_HPP_
