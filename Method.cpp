@@ -12,33 +12,22 @@
 ft::Method *ft::Method::getRequest(std::string method) {
     if (!method.compare("GET"))
         return new Get();
-    else if (!method.compare("POST"))
-        return new Post();
-    else if (!method.compare("DELETE"))
-        return new Delete();
-    else
-        return new MethodNotAllowed();
+    return new Get();
+    // else if (!method.compare("POST"))
+    //     return new Post();
+    // else if (!method.compare("DELETE"))
+    //     return new Delete();
+    // else
+    //     return new MethodNotAllowed();
 }
 
-ft::Response    ft::Method::prepareResponse(
-    const std::map <std::string, std::string> &header) {
-    if (!header.count("Host") || !header.count("Version")) {
-        return (ft::Response(HTTP_STATUS_BAD_REQUEST, "", ""));
-    }
-    if (header.at("Version").compare("HTTP/1.1")) {
-        std::cout << header.at("Version");
-        return (ft::Response(HTTP_STATUS_HTTP_VERSION_NOT_SUPPORTED, "", ""));
-    }
-    return (ft::Response(HTTP_STATUS_OK, "", ""));
-}
 
-std::string buildHeader(const std::string &buffer, std::string &path) {
+std::string buildHeader(const std::string &buffer, std::string path) {
     std::string extension;
     std::string header;
     std::stringstream   ss;
 
     extension = path.substr(path.find_last_of(".") + 1);
-    std::cout << path << std::endl;
     std::cout << extension << std::endl;
     std::map <std::string, std::string> mime_types;
     mime_types["html"] = "text/html";
@@ -59,7 +48,6 @@ std::string buildHeader(const std::string &buffer, std::string &path) {
     header += "Server: 42webserv/1.0\r\n";
     header += "Content-Length: " + ss.str() + "\r\n";
     header += "Content-Type: " + mime_types.at(extension) + "\r\n";
-    // Do other stuff
     std::cout << header << "_____________________" << std::endl;
     return (header);
 }
@@ -89,6 +77,10 @@ std::string getPath(const std::string &uri,
     } else {
         path = "." + root + uri + "/" + index;
     }
+    // if (*(uri.end() - 1) != '/') {
+        // uri += "/";
+    // }
+    //path = "." + root + uri + index;
     return (path);
 }
 
@@ -107,79 +99,92 @@ std::string buildBody(const std::string &uri,
     return "";
 }
 
-std::string getOkBody(ft::Config::Server *server,const std::string &uri, std::string &path) {
-    std::string body;
-    for (size_t i = 0; i < server->index.size(); i++) {
-        body = buildBody(uri, server->root, server->index[i], path);
-        if (!body.empty())
-            return (body);
+std::string createFilePath(std::string root, std::string uri) {
+    std::string path;
+
+    path = "." + root + uri;
+    return (path);
+}
+
+void openFile(std::ifstream&file, std::string uri,
+    ft::Config::Server *server,
+    ft::Response &res) {
+
+    if (*(uri.end() - 1) != '/') {
+        res.setPath(createFilePath(server->root, uri));
+        file.open(res.getPath().c_str());
+        if (!file.is_open()) {
+            uri += "/";
+        }
     }
-    return (body);
+    if (file.is_open() == false) {
+        for (size_t i = 0; i < server->index.size(); i++) {
+            res.setPath(createFilePath(server->root, uri + server->index[i]));
+            file.open(res.getPath().c_str());
+            if (file.is_open()) {
+                break ;
+            }
+        }
+    }
 }
 
-std::string ImNotOk(ft::Config::Server *server, std::string &path) {
-    std::string body;
-    body = buildBody("/", server->root, server->error_page.path, path);
-    return (body);
+std::string getErrorPage(ft::Config::Server *server, int code) {
+    std::string errorPage;
+    for (size_t i = 0; i < server->error_page.size(); i++) {
+        for (std::set<u_int16_t>::iterator it = server->error_page[i].code.begin();
+            it != server->error_page[i].code.end(); it++) {
+            if (*it == code) {
+                errorPage = server->error_page[i].path;
+                break ;
+            }
+        }
+    }
+    return (errorPage);
 }
 
-ft::Response ft::Get::buildResponse(
+void setBodyErrorPage(ft::Config::Server *server, ft::Response& res, int code) {
+    std::ifstream file;
+    std::stringstream buffer;
+    std::string errorPage = getErrorPage(server, code);
+    res.setPath(createFilePath(server->root, errorPage));
+    if (!errorPage.empty()) {
+        file.open(res.getPath().c_str());
+    }
+    if (file.is_open() == true) {
+        buffer << file.rdbuf();
+        res.setBody(buffer.str());
+        file.close();
+    } else {
+        res.setBody("<html><body><h1>Pensonalizned body</h1></body></html>");
+    }
+}
+
+void setBody(ft::Config::Server *server, ft::Response &res, std::ifstream &file) {
+    std::stringstream buffer;
+    if (file.is_open() == false) {
+        res.setStatusLine(HTTP_STATUS_NOT_FOUND);
+        setBodyErrorPage(server, res, 404);
+    } else {
+        buffer << file.rdbuf();
+        res.setBody(buffer.str());
+        file.close();
+    }
+}
+
+std::string ft::Get::buildResponse(
     const std::map<std::string, std::string> &header,
     ft::Config::Server *server) {
-    ft::Response response = prepareResponse(header);
-    std::string responseHeader, body, path;
-    body = "";
-    if (response._status_code_reason_phrase != HTTP_STATUS_OK) {
-        return (response);
-    }
-    ft::Config::Server::Location *location;
-
-    location = getLocation(server, header.at("Uri"));
-    if (!location) {
-        std::cout << 1 << std::endl;
-        body = ImNotOk(server, path);
-        responseHeader = buildHeader(body, path);
-        return Response(HTTP_STATUS_NOT_FOUND, responseHeader, body);
-    }
-    body = getOkBody(server, header.at("Uri"), path);
-    responseHeader = buildHeader(body, path);
-    if (body.empty()) {
-        std::cout << 2 << std::endl;
-        body = ImNotOk(server, path);
-        return Response(HTTP_STATUS_NOT_FOUND, responseHeader, body);
-    }
-
-    if (responseHeader.empty()) {
-        std::cout << 3 << std::endl;
-        body = ImNotOk(server, path);
-        responseHeader = buildHeader(body, path);
-        return Response(HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE, "", body);
-    }
-    return Response(HTTP_STATUS_OK, responseHeader, body);
-}
-
-ft::Response ft::Post::buildResponse(
-    const std::map<std::string, std::string> &header,
-    ft::Config::Server *server) {
-    if (!header.count("Content-Length")) {
-        return Response(HTTP_STATUS_LENGTH_REQUIRED, "", "");
-    }
-    (void)server;
-    return Response(HTTP_STATUS_CREATED, "", "");
-}
-
-ft::Response ft::Delete::buildResponse(
-    const std::map<std::string, std::string> &header,
-    ft::Config::Server *server) {
-    (void)server;
-    (void)header;
-    return Response(HTTP_STATUS_ACCEPTED, "", "");
-}
-
-ft::Response ft::MethodNotAllowed::buildResponse(
-    const std::map<std::string, std::string> &header,
-    ft::Config::Server *server) {
-    (void)header;
-    (void)server;
-    return Response(HTTP_STATUS_METHOD_NOT_ALLOWED, "", "");
+        ft::Response res;
+        std::ifstream file;
+        if (server == NULL) {
+            res.setStatusLine(HTTP_STATUS_BAD_REQUEST);
+            res.setPath(".html");
+            res.setBody("<html><body><h1>Bad request</h1></body></html>");
+            res.setHeader(buildHeader(res.getBody(), res.getPath()));
+            return (res.makeResponse());
+        }
+        openFile(file, header.at("Uri"), server, res);
+        setBody(server, res, file);
+        res.setHeader(buildHeader(res.getBody(), res.getPath()));
+    return res.makeResponse();
 }

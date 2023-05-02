@@ -84,18 +84,10 @@ void ft::Server::handleConnection(int client_fd, int server_fd) {
         buffer[ret] = '\0';
         header = loadHeader(buffer);
 
-        try {
-            server = getServer(server_fd, &header);
-            Method *req = ft::Method::getRequest(header["Method"]);
-            ft::Response res = req->buildResponse(header, server);
-            send(client_fd, res.message().c_str(), res.message().size(), 0);
-        } catch (std::exception) {
-            std::string path;
-            std::string body = ImNotOk(server, path);
-            ft::Response res = Response(HTTP_STATUS_BAD_REQUEST, "", body);
-            send(client_fd, res.message().c_str(), res.message().size(), 0);
-        }
-
+        server = getServer(server_fd, &header);
+        Method *req = ft::Method::getRequest(header["Method"]);
+        std::string res = req->buildResponse(header, server);
+        send(client_fd, res.c_str(), res.size(), 0);
         close(client_fd);
     }
 }
@@ -246,9 +238,9 @@ void ft::Server::loadBody(char *buffer) {
 ft::Config::Server *ft::Server::getServer(int server_fd,
     std::map<std::string, std::string> *header) {
     ft::Config::iterator    it;
-
-    if (!header->count("Host") || header->at("Host").empty())
-        throw std::exception();
+    if (!header->count("Host") || header->at("Host").empty()) {
+        return NULL;
+    }
 
     for (it = this->_config.server.begin();
         it != this->_config.server.end(); it++) {

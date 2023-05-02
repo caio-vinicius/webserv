@@ -19,7 +19,7 @@ class Method {
     static Method *getRequest(std::string method);
     ft::Response prepareResponse(const std::map <std::string, \
         std::string> &header);
-    virtual ft::Response buildResponse(
+    virtual std::string buildResponse(
         const std::map<std::string, std::string> &header,
         ft::Config::Server *server) = 0;
     ~Method() {}
@@ -28,38 +28,38 @@ class Method {
 class Get : public Method {
  public:
     Get() {}
-    ft::Response buildResponse(
+    std::string buildResponse(
         const std::map<std::string, std::string> &header,
         ft::Config::Server *server);
     ~Get() {}
 };
 
-class Post : public Method {
- public:
-    Post() {}
-    ft::Response buildResponse(
-        const std::map<std::string, std::string> &header,
-        ft::Config::Server *server);
-    ~Post() {}
-};
+// class Post : public Method {
+//  public:
+//     Post() {}
+//     std::string buildResponse(
+//         const std::map<std::string, std::string> &header,
+//         ft::Config::Server *server);
+//     ~Post() {}
+// };
 
-class Delete : public Method {
- public:
-    Delete() {}
-    ft::Response buildResponse(
-        const std::map<std::string, std::string> &header,
-        ft::Config::Server *server);
-    ~Delete() {}
-};
+// class Delete : public Method {
+//  public:
+//     Delete() {}
+//     std::string buildResponse(
+//         const std::map<std::string, std::string> &header,
+//         ft::Config::Server *server);
+//     ~Delete() {}
+// };
 
-class MethodNotAllowed : public Method {
- public:
-    MethodNotAllowed() {}
-    ft::Response buildResponse(
-        const std::map<std::string, std::string> &header,
-        ft::Config::Server *server);
-    ~MethodNotAllowed() {}
-};
+// class MethodNotAllowed : public Method {
+//  public:
+//     MethodNotAllowed() {}
+//     std::string buildResponse(
+//         const std::map<std::string, std::string> &header,
+//         ft::Config::Server *server);
+//     ~MethodNotAllowed() {}
+// };
 
 }  // namespace ft
 std::string ImNotOk(ft::Config::Server *server, std::string &path);

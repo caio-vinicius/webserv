@@ -51,21 +51,26 @@
 namespace ft {
 class Response {
  public:
-        Response(const char *status_code_reason_phrase,
-                    std::string header,
-                    std::string body);
-        ~Response();
-        std::string message(void);
-        std::string statusCode(void);
-        std::string header(void);
-        std::string body(void);
-
-        std::string _status_code_reason_phrase;
+        Response(void);
+        void setHeader(std::string header);
+        void setBody(std::string body);
+        void setStatusLine(std::string status_line);
+        void setStatusCode(std::string status_code);
+        void setPath(std::string path);
+        std::string getHeader(void);
+        std::string getBody(void);
+        std::string getStatusLine(void);
+        std::string getStatusCode(void);
+        std::string getPath(void);
+        std::string getDefaultErrorPage(std::string status_code);
+        std::string makeResponse(void);
+        ~Response(void);
  private:
+        std::string _path;
         std::string _header;
         std::string _body;
-        std::string _message;
         std::string _status_line;
+        std::string _status_code;
 };  // Response
 
 }  // namespace ft

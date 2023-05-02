@@ -10,7 +10,7 @@
 #include <iostream>
 #include <sstream>
 #include <cstdlib>
-
+#include <set>
 namespace ft {
 
 class Config {
@@ -50,7 +50,7 @@ class Config::Server {
     };
 
     struct error_page_t {
-        std::vector<u_int16_t> code;
+        std::set<u_int16_t> code;
         std::string path;
     };
 
@@ -58,7 +58,7 @@ class Config::Server {
     std::vector<address_port> listen;
     typedef std::vector<address_port> listens;
     std::vector<std::string> server_name;
-    error_page_t error_page;
+    std::vector<error_page_t> error_page;
     size_t client_max_body_size;
     std::string root;
     std::vector<std::string> index;

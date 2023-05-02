@@ -87,15 +87,16 @@ void ft::Config::Server::processServerName(std::vector<std::string> &param) {
 
 void ft::Config::Server::processErrorPage(std::vector<std::string> &param) {
     std::vector<std::string>::iterator it;
-
-    this->error_page.path = param.back();
+    ft::Config::Server::error_page_t error_page;
+    error_page.path = param.back();
     param.pop_back();
     it = param.begin();
     it++;
     while (it != param.end()) {
-        this->error_page.code.push_back(std::atoi(it->c_str()));
+        error_page.code.insert(std::atoi(it->c_str()));
         it++;
     }
+    this->error_page.push_back(error_page);
 }
 
 void ft::Config::Server::processClientMaxBodySize(
