@@ -9,6 +9,9 @@
 
 #include "./Config.hpp"
 
+#define CRLF "\r\n"
+#define SP ' '
+
 #define HTTP_VERSION "HTTP/1.1"
 #define HTTP_STATUS_NULL "000"
 #define HTTP_STATUS_OK "200 OK"

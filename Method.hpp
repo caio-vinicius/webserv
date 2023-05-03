@@ -11,6 +11,7 @@
 
 #include "./Response.hpp"
 #include "./Config.hpp"
+#include "./Server.hpp"
 
 namespace ft {
 class Method {
@@ -20,49 +21,52 @@ class Method {
     ft::Response prepareResponse(const std::map <std::string, \
         std::string> &header);
     virtual std::string buildResponse(
-        const std::map<std::string, std::string> &header,
+        const ft::Server::headerType &header,
+        const ft::Server::bodyType &body,
         ft::Config::Server *server) = 0;
     ~Method() {}
 };
 
-class Get : public Method {
+class get : public Method {
  public:
-    Get() {}
+    get() {}
     std::string buildResponse(
-        const std::map<std::string, std::string> &header,
+        const ft::Server::headerType &header,
+        const ft::Server::bodyType &body,
         ft::Config::Server *server);
-    ~Get() {}
+    ~get() {}
 };
 
-// class Post : public Method {
-//  public:
-//     Post() {}
-//     std::string buildResponse(
-//         const std::map<std::string, std::string> &header,
-//         ft::Config::Server *server);
-//     ~Post() {}
-// };
+class post : public Method {
+ public:
+    post() {}
+    std::string buildResponse(
+        const ft::Server::headerType &header,
+        const ft::Server::bodyType &body,
+        ft::Config::Server *server);
+    ~post() {}
+};
 
 // class Delete : public Method {
 //  public:
 //     Delete() {}
 //     std::string buildResponse(
-//         const std::map<std::string, std::string> &header,
+//         const ft::Server::headerType &header,
+//         const ft::Server::bodyType &body,
 //         ft::Config::Server *server);
 //     ~Delete() {}
 // };
 
-// class MethodNotAllowed : public Method {
-//  public:
-//     MethodNotAllowed() {}
-//     std::string buildResponse(
-//         const std::map<std::string, std::string> &header,
-//         ft::Config::Server *server);
-//     ~MethodNotAllowed() {}
-// };
+class methodNotAllowed : public Method {
+  public:
+     methodNotAllowed() {}
+     std::string buildResponse(
+         const ft::Server::headerType &header,
+         const ft::Server::bodyType &body,
+         ft::Config::Server *server);
+     ~methodNotAllowed() {}
+ };
 
 }  // namespace ft
-std::string ImNotOk(ft::Config::Server *server, std::string &path);
-
 
 #endif  // METHOD_HPP_

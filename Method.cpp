@@ -8,19 +8,17 @@
 #include <algorithm>
 
 #include "./Method.hpp"
+#include "./Response.hpp"
 
 ft::Method *ft::Method::getRequest(std::string method) {
     if (!method.compare("GET"))
-        return new Get();
-    return new Get();
-    // else if (!method.compare("POST"))
-    //     return new Post();
+        return (new get());
+    else if (!method.compare("POST"))
+        return (new post());
     // else if (!method.compare("DELETE"))
     //     return new Delete();
-    // else
-    //     return new MethodNotAllowed();
+    return (new methodNotAllowed());
 }
-
 
 std::string buildHeader(const std::string &buffer, std::string path) {
     std::string extension;
@@ -41,14 +39,16 @@ std::string buildHeader(const std::string &buffer, std::string path) {
     mime_types["gif"] = "image/gif";
     mime_types["mp3"] = "audio/mpeg";
     mime_types["mp4"] = "video/mp4";
-    if (mime_types.count(extension) == 0)
-        return "";
 
     ss << buffer.length();
-    header += "Server: 42webserv/1.0\r\n";
-    header += "Content-Length: " + ss.str() + "\r\n";
-    header += "Content-Type: " + mime_types.at(extension) + "\r\n";
-    std::cout << header << "_____________________" << std::endl;
+    header += "Server: 42webserv/1.0";
+    header += CRLF;
+    header += "Content-Length: " + ss.str();
+    header += CRLF;
+    if (mime_types.count(extension) != 0) {
+        header += "Content-Type: " + mime_types.at(extension);
+        header += CRLF;
+    }
     return (header);
 }
 
@@ -106,7 +106,8 @@ std::string createFilePath(std::string root, std::string uri) {
     return (path);
 }
 
-void openFile(std::ifstream&file, std::string uri,
+void openFile(std::ifstream &file,
+    std::string uri,
     ft::Config::Server *server,
     ft::Response &res) {
 
@@ -171,20 +172,63 @@ void setBody(ft::Config::Server *server, ft::Response &res, std::ifstream &file)
     }
 }
 
-std::string ft::Get::buildResponse(
-    const std::map<std::string, std::string> &header,
+std::string ft::methodNotAllowed::buildResponse(
+    const ft::Server::headerType &header,
+    const ft::Server::bodyType &body,
     ft::Config::Server *server) {
-        ft::Response res;
-        std::ifstream file;
-        if (server == NULL) {
-            res.setStatusLine(HTTP_STATUS_BAD_REQUEST);
-            res.setPath(".html");
-            res.setBody("<html><body><h1>Bad request</h1></body></html>");
-            res.setHeader(buildHeader(res.getBody(), res.getPath()));
-            return (res.makeResponse());
-        }
-        openFile(file, header.at("Uri"), server, res);
-        setBody(server, res, file);
+    ft::Response res;
+
+    (void)header;
+    (void)body;
+    if (server == NULL) {
+        res.setStatusLine(HTTP_STATUS_BAD_REQUEST);
         res.setHeader(buildHeader(res.getBody(), res.getPath()));
-    return res.makeResponse();
+        return (res.makeResponse());
+    }
+    res.setStatusLine(HTTP_STATUS_METHOD_NOT_ALLOWED);
+    res.setHeader(buildHeader(res.getBody(), res.getPath()));
+    return (res.makeResponse());
+}
+
+std::string ft::get::buildResponse(
+    const ft::Server::headerType &header,
+    const ft::Server::bodyType &body,
+    ft::Config::Server *server) {
+    ft::Response res;
+    std::ifstream file;
+
+    (void)body;
+    if (server == NULL) {
+        res.setStatusLine(HTTP_STATUS_BAD_REQUEST);
+        res.setPath(".html");
+        res.setBody("<html><body><h1>Bad request</h1></body></html>");
+        res.setHeader(buildHeader(res.getBody(), res.getPath()));
+        return (res.makeResponse());
+    }
+    openFile(file, header.at("Uri"), server, res);
+    setBody(server, res, file);
+    res.setHeader(buildHeader(res.getBody(), res.getPath()));
+    return (res.makeResponse());
+}
+
+std::string ft::post::buildResponse(
+    const ft::Server::headerType &header,
+    const ft::Server::bodyType &body,
+    ft::Config::Server *server) {
+    ft::Response res;
+    std::ifstream file;
+
+    (void)body;
+    if (server == NULL) {
+        res.setStatusLine(HTTP_STATUS_BAD_REQUEST);
+        res.setHeader(buildHeader(res.getBody(), res.getPath()));
+        return (res.makeResponse());
+    }
+    std::cout << "path1: " << res.getPath() << std::endl;
+    openFile(file, header.at("Uri"), server, res);
+    std::cout << "Uri: " << header.at("Uri") << std::endl;
+    std::cout << "path2: " << res.getPath() << std::endl;
+    //setBody(server, res, file);
+    //res.setHeader(buildHeader(res.getBody(), res.getPath()));
+    return (res.makeResponse());
 }

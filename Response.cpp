@@ -3,9 +3,6 @@
 
 #include "./Response.hpp"
 
-#define CRLF "\r\n"
-#define SP " "
-
 ft::Response::Response(void): _header(""), _body(""), _status_line(HTTP_STATUS_OK) {}
 ft::Response::~Response(void) {}
 

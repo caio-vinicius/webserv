@@ -62,11 +62,63 @@ void ft::Server::run() {
     std::cout << "Server stopped" << std::endl;
 }
 
+void loadRequestLine(std::istringstream &ss,
+                     ft::Server::headerType &header) {
+    std::string requestLine;
+
+    std::getline(ss, requestLine);
+    requestLine = utils::removeChr(requestLine, '\r');
+    std::vector<std::string> v = utils::split(&requestLine, SP);
+    header["Method"] = v.at(0);
+    header["Uri"] = v.at(1);
+    header["Version"] = v.at(2);
+}
+
+void loadHeader(std::istringstream &ss,
+                ft::Server::headerType &header) {
+    std::string line;
+    std::string key;
+    std::string value;
+
+    while (std::getline(ss, line)) {
+        if (line.empty()) {
+            break;
+        }
+        key = line.substr(0, line.find(":"));
+        value = line.substr(line.find(":") + 2);
+        value = utils::removeChr(value, '\r');
+        header[key] = value;
+    }
+}
+
+void loadBody(std::istringstream &ss,
+              ft::Server::bodyType &body) {
+    //std::string line;
+
+    //while (std::getline(ss, line)) {
+    //    if (line.empty()) {
+    //        break;
+    //    }
+    //}
+    body = ss.str();
+}
+
+void loadRequest(char *buffer,
+                 ft::Server::headerType &header,
+                 ft::Server::bodyType &body) {
+    //std::string str(buffer);
+    std::istringstream ss(buffer);
+
+    loadRequestLine(ss, header);
+    loadHeader(ss, header);
+    loadBody(ss, body);
+}
 
 void ft::Server::handleConnection(int client_fd, int server_fd) {
     int ret;
     char buffer[8192];  // 8K buffer
     std::map<std::string, std::string> header;
+    std::string body;
     ft::Config::Server  *server;
 
     if (client_fd < 0) {
@@ -82,11 +134,12 @@ void ft::Server::handleConnection(int client_fd, int server_fd) {
         if (ret == 0)
             return;
         buffer[ret] = '\0';
-        header = loadHeader(buffer);
+        //header = loadHeader(buffer);
+        loadRequest(buffer, header, body);
 
         server = getServer(server_fd, &header);
         Method *req = ft::Method::getRequest(header["Method"]);
-        std::string res = req->buildResponse(header, server);
+        std::string res = req->buildResponse(header, body, server);
         send(client_fd, res.c_str(), res.size(), 0);
         close(client_fd);
     }
@@ -186,53 +239,6 @@ std::vector<int> ft::Server::createSockets(Config::servers server) {
         }
     }
     return (sockets);
-}
-
-void requestLine(std::istringstream &ss,
-    std::map<std::string, std::string> *header) {
-    std::string request_line;
-    std::string line;
-
-    std::getline(ss, request_line);
-    request_line = utils::remove_chr(request_line, '\r');
-    std::vector<std::string> vec = utils::split(&request_line,  ' ');
-    (*header)["Method"] = vec.at(0);
-    (*header)["Uri"] = vec.at(1);
-    (*header)["Version"] = vec.at(2);
-}
-
-
-ft::Server::header_type ft::Server::loadHeader(char *buffer) {
-    ft::Server::header_type header;
-    std::string line;
-    std::string str(buffer);
-    std::istringstream ss(str);
-    std::string key;
-    std::string value;
-
-    requestLine(ss, &header);
-    while (std::getline(ss, line)) {
-        if (line.empty()) {
-            break;
-        }
-        key = line.substr(0, line.find(":"));
-        value = line.substr(line.find(":") + 2);
-        value = utils::remove_chr(value, '\r');
-        header[key] = value;
-    }
-    return (header);
-}
-
-void ft::Server::loadBody(char *buffer) {
-    std::string str(buffer);
-    std::istringstream ss(str);
-    std::string line;
-
-    while (std::getline(ss, line)) {
-        if (line.empty()) {
-            break;
-        }
-    }
 }
 
 ft::Config::Server *ft::Server::getServer(int server_fd,
