@@ -3,7 +3,8 @@
 
 #include "./Response.hpp"
 
-ft::Response::Response(void): _header(""), _body(""), _status_line(HTTP_STATUS_OK) {}
+ft::Response::Response(void): _header(""), _body(""),
+     _status_line(HTTP_STATUS_OK) {}
 ft::Response::~Response(void) {}
 
 std::string ft::Response::getHeader(void) {
@@ -47,7 +48,8 @@ void ft::Response::setPath(std::string path) {
 }
 
 std::string ft::Response::makeResponse(void) {
-    std::string response = std::string(HTTP_VERSION) + SP + this->getStatusLine() + CRLF;
+    std::string response = std::string(HTTP_VERSION) + SP
+        + this->getStatusLine() + CRLF;
     response += this->getHeader() + CRLF;
     response += this->getBody();
     std::cout << "Response: " << std::endl << response << std::endl;

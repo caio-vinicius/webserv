@@ -96,7 +96,8 @@ char **ft::Cgi::createEnvp(void) {
     std::vector<std::string> envp;
 
     while (it != ite) {
-        envp.push_back(reinterpret_cast<const char *>((it->first + "=" + it->second).c_str()));
+        envp.push_back(reinterpret_cast<const char *>((it->first + "="
+            + it->second).c_str()));
         it++;
     }
     return (vectorToChar(envp));

@@ -102,7 +102,6 @@ void loadBody(std::istringstream &ss,
 void loadRequest(char *buffer,
                  ft::Server::headerType &header,
                  ft::Server::bodyType &body) {
-    //std::string str(buffer);
     std::istringstream ss(buffer);
 
     loadRequestLine(ss, header);

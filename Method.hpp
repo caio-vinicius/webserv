@@ -27,45 +27,45 @@ class Method {
     ~Method() {}
 };
 
-class get : public Method {
+class Get : public Method {
  public:
-    get() {}
+    Get() {}
     std::string buildResponse(
         const ft::Server::headerType &header,
         const ft::Server::bodyType &body,
         ft::Config::Server *server);
-    ~get() {}
+    ~Get() {}
 };
 
-class post : public Method {
+class Post : public Method {
  public:
-    post() {}
+    Post() {}
     std::string buildResponse(
         const ft::Server::headerType &header,
         const ft::Server::bodyType &body,
         ft::Config::Server *server);
-    ~post() {}
+    ~Post() {}
 };
 
-// class Delete : public Method {
-//  public:
-//     Delete() {}
-//     std::string buildResponse(
-//         const ft::Server::headerType &header,
-//         const ft::Server::bodyType &body,
-//         ft::Config::Server *server);
-//     ~Delete() {}
-// };
+class Delete : public Method {
+ public:
+    Delete() {}
+    std::string buildResponse(
+        const ft::Server::headerType &header,
+        const ft::Server::bodyType &body,
+        ft::Config::Server *server);
+    ~Delete() {}
+};
 
-class methodNotAllowed : public Method {
-  public:
-     methodNotAllowed() {}
+class MethodNotAllowed : public Method {
+ public:
+     MethodNotAllowed() {}
      std::string buildResponse(
          const ft::Server::headerType &header,
          const ft::Server::bodyType &body,
          ft::Config::Server *server);
-     ~methodNotAllowed() {}
- };
+     ~MethodNotAllowed() {}
+};
 
 }  // namespace ft
 

@@ -17,6 +17,7 @@
 #define HTTP_STATUS_OK "200 OK"
 #define HTTP_STATUS_CREATED "201 Created"
 #define HTTP_STATUS_ACCEPTED "202 Accepted"
+#define HTTP_STATUS_NO_CONTENT "204 No Content"
 #define HTTP_STATUS_NOT_FOUND "404 Not Found"
 #define HTTP_STATUS_BAD_REQUEST "400 Bad Request"
 #define HTTP_STATUS_NOT_IMPLEMENTED "501 Not Implemented"

@@ -4,7 +4,6 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-//CHECK
 #include <algorithm>
 
 #include "./Method.hpp"
@@ -13,12 +12,12 @@
 
 ft::Method *ft::Method::getRequest(std::string method) {
     if (!method.compare("GET"))
-        return (new get());
+        return (new Get());
     else if (!method.compare("POST"))
-        return (new post());
-    // else if (!method.compare("DELETE"))
-    //     return new Delete();
-    return (new methodNotAllowed());
+        return (new Post());
+    else if (!method.compare("DELETE"))
+        return new Delete();
+    return (new MethodNotAllowed());
 }
 
 std::string buildHeader(const std::string &buffer, std::string path) {
@@ -79,38 +78,6 @@ ft::Config::Server::Location *getLocation(ft::Config::Server *server,
     return (currentLocation);
 }
 
-
-std::string getPath(const std::string &uri,
-                    const std::string &root,
-                    const std::string &index) {
-    std::string path;
-    if (!uri.compare("/")) {
-        path = "." + root + uri + index;
-    } else {
-        path = "." + root + uri + "/" + index;
-    }
-    // if (*(uri.end() - 1) != '/') {
-        // uri += "/";
-    // }
-    //path = "." + root + uri + index;
-    return (path);
-}
-
-std::string buildBody(const std::string &uri,
-                        const std::string &root,
-                        const std::string &page,
-                        std::string &path) {
-    std::stringstream buffer;
-    path = getPath(uri, root, page);
-    std::ifstream file(path.c_str());
-    if (file.is_open()) {
-        buffer << file.rdbuf();
-        file.close();
-        return buffer.str();
-    }
-    return "";
-}
-
 std::string createFilePath(std::string root, std::string uri) {
     std::string path;
 
@@ -135,7 +102,7 @@ void openFile(std::ifstream &file,
             res.setPath(createFilePath(server->root, uri + server->index[i]));
             file.open(res.getPath().c_str());
             if (file.is_open()) {
-                break ;
+                break;
             }
         }
     }
@@ -144,11 +111,11 @@ void openFile(std::ifstream &file,
 std::string getErrorPage(ft::Config::Server *server, int code) {
     std::string errorPage;
     for (size_t i = 0; i < server->error_page.size(); i++) {
-        for (std::set<u_int16_t>::iterator it = server->error_page[i].code.begin();
-            it != server->error_page[i].code.end(); it++) {
+        for (std::set<u_int16_t>::iterator it = server->error_page[i].
+            code.begin(); it != server->error_page[i].code.end(); it++) {
             if (*it == code) {
                 errorPage = server->error_page[i].path;
-                break ;
+                break;
             }
         }
     }
@@ -192,25 +159,7 @@ void setBody(ft::Config::Server *server,
     }
 }
 
-std::string ft::methodNotAllowed::buildResponse(
-    const ft::Server::headerType &header,
-    const ft::Server::bodyType &body,
-    ft::Config::Server *server) {
-    ft::Response res;
-
-    (void)header;
-    (void)body;
-    if (server == NULL) {
-        res.setStatusLine(HTTP_STATUS_BAD_REQUEST);
-        res.setHeader(buildHeader(res.getBody(), res.getPath()));
-        return (res.makeResponse());
-    }
-    res.setStatusLine(HTTP_STATUS_METHOD_NOT_ALLOWED);
-    res.setHeader(buildHeader(res.getBody(), res.getPath()));
-    return (res.makeResponse());
-}
-
-std::string ft::get::buildResponse(
+std::string ft::Get::buildResponse(
     const ft::Server::headerType &header,
     const ft::Server::bodyType &body,
     ft::Config::Server *server) {
@@ -246,7 +195,7 @@ void createFile(std::string &path,
     }
 }
 
-std::string ft::post::buildResponse(
+std::string ft::Post::buildResponse(
     const ft::Server::headerType &header,
     const ft::Server::bodyType &body,
     ft::Config::Server *server) {
@@ -280,5 +229,62 @@ std::string ft::post::buildResponse(
             res.setHeader(buildHeader(res.getBody(), res.getPath()));
         }
     }
+    file.close();
+    return (res.makeResponse());
+}
+
+std::string ft::Delete::buildResponse(
+    const ft::Server::headerType &header,
+    const ft::Server::bodyType &body,
+    ft::Config::Server *server) {
+    ft::Response res;
+    std::string filePath;
+    std::ifstream file;
+
+    if (server == NULL) {
+        res.setStatusLine(HTTP_STATUS_BAD_REQUEST);
+        res.setHeader(buildHeader(res.getBody(), res.getPath()));
+        return (res.makeResponse());
+    }
+    if (body.size() > server->client_max_body_size) {
+        res.setStatusLine(HTTP_STATUS_REQUEST_ENTITY_TOO_LARGE);
+        res.setHeader(buildHeader(res.getBody(), res.getPath()));
+        return (res.makeResponse());
+    }
+
+    filePath = createFilePath(server->root, header.at("Uri"));
+    res.setPath(filePath);
+    file.open(filePath.c_str());
+    if (file.is_open()) {
+        if (std::remove(filePath.c_str())) {
+            res.setStatusLine(HTTP_STATUS_INTERNAL_SERVER_ERROR);
+            res.setHeader(buildHeaderPost(res.getBody(), res.getPath()));
+        } else {
+            res.setStatusLine(HTTP_STATUS_NO_CONTENT);
+            res.setHeader(buildHeaderPost(res.getBody(), res.getPath()));
+        }
+    } else {
+        res.setStatusLine(HTTP_STATUS_NOT_FOUND);
+        res.setHeader(buildHeaderPost(res.getBody(), res.getPath()));
+    }
+    file.close();
+    return (res.makeResponse());
+}
+
+std::string ft::MethodNotAllowed::buildResponse(
+    const ft::Server::headerType &header,
+    const ft::Server::bodyType &body,
+    ft::Config::Server *server) {
+    ft::Response res;
+
+    (void)header;
+    (void)body;
+    if (server == NULL) {
+        res.setStatusLine(HTTP_STATUS_BAD_REQUEST);
+        res.setHeader(buildHeader(res.getBody(), res.getPath()));
+        return (res.makeResponse());
+    }
+    res.setStatusLine(HTTP_STATUS_METHOD_NOT_ALLOWED);
+    res.setHeader(buildHeader(res.getBody(), res.getPath()));
     return (res.makeResponse());
 }
