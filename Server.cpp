@@ -81,7 +81,7 @@ void loadHeader(std::istringstream &ss,
     std::string value;
 
     while (std::getline(ss, line)) {
-        if (line.empty()) {
+        if (line.empty() || line == "\r") {
             break;
         }
         key = line.substr(0, line.find(":"));
@@ -93,14 +93,10 @@ void loadHeader(std::istringstream &ss,
 
 void loadBody(std::istringstream &ss,
               ft::Server::bodyType &body) {
-    //std::string line;
+    std::string line;
 
-    //while (std::getline(ss, line)) {
-    //    if (line.empty()) {
-    //        break;
-    //    }
-    //}
-    body = ss.str();
+    std::getline(ss, line);
+    body = line;
 }
 
 void loadRequest(char *buffer,
@@ -134,7 +130,6 @@ void ft::Server::handleConnection(int client_fd, int server_fd) {
         if (ret == 0)
             return;
         buffer[ret] = '\0';
-        //header = loadHeader(buffer);
         loadRequest(buffer, header, body);
 
         server = getServer(server_fd, &header);

@@ -24,6 +24,7 @@
 #define HTTP_STATUS_NOT_MODIFIED "304 Not Modified"
 #define HTTP_STATUS_MOVED_PERMANENTLY "301 Moved Permanently"
 #define HTTP_STATUS_MOVED_TEMPORARILY "302 Moved Temporarily"
+#define HTTP_STATUS_SEE_OTHER "303 See Other"
 #define HTTP_STATUS_FORBIDDEN "403 Forbidden"
 #define HTTP_STATUS_UNAUTHORIZED "401 Unauthorized"
 #define HTTP_STATUS_METHOD_NOT_ALLOWED "405 Method Not Allowed"

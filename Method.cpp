@@ -52,6 +52,17 @@ std::string buildHeader(const std::string &buffer, std::string path) {
     return (header);
 }
 
+std::string buildHeaderPost(const std::string &buffer, std::string path) {
+    std::string header;
+
+    (void)buffer;
+    header += "Server: 42webserv/1.0";
+    header += CRLF;
+    header += "Location: " + path;
+    header += CRLF;
+    return (header);
+}
+
 ft::Config::Server::Location *getLocation(ft::Config::Server *server,
     std::string uri) {
     std::map<std::string, ft::Config::Server::Location>::iterator locationIt;
@@ -211,24 +222,38 @@ std::string ft::get::buildResponse(
     return (res.makeResponse());
 }
 
+void createFile(std::string &path,
+                const ft::Server::bodyType &body) {
+    std::ofstream newFile;
+
+    newFile.open(path.c_str());
+    newFile << body;
+    newFile.close();
+}
+
 std::string ft::post::buildResponse(
     const ft::Server::headerType &header,
     const ft::Server::bodyType &body,
     ft::Config::Server *server) {
     ft::Response res;
+    std::string filePath;
     std::ifstream file;
 
-    (void)body;
     if (server == NULL) {
         res.setStatusLine(HTTP_STATUS_BAD_REQUEST);
         res.setHeader(buildHeader(res.getBody(), res.getPath()));
         return (res.makeResponse());
     }
-    std::cout << "path1: " << res.getPath() << std::endl;
-    openFile(file, header.at("Uri"), server, res);
-    std::cout << "Uri: " << header.at("Uri") << std::endl;
-    std::cout << "path2: " << res.getPath() << std::endl;
-    //setBody(server, res, file);
-    //res.setHeader(buildHeader(res.getBody(), res.getPath()));
+    filePath = createFilePath(server->root, header.at("Uri"));
+    res.setPath(filePath);
+    file.open(filePath.c_str());
+    if (file.is_open()) {
+        res.setStatusLine(HTTP_STATUS_SEE_OTHER);
+        res.setHeader(buildHeaderPost(res.getBody(), res.getPath()));
+    } else {
+        createFile(filePath, body);
+        res.setStatusLine(HTTP_STATUS_CREATED);
+        res.setHeader(buildHeaderPost(res.getBody(), res.getPath()));
+    }
     return (res.makeResponse());
 }
