@@ -12,12 +12,12 @@
 #include <string>
 #include <vector>
 #include <cstring>
-
+#include <cstdlib>
 
 namespace ft {
 class Cgi {
  public:
-    Cgi(std::string const path, std::map<std::string, std::string> const env);
+    Cgi(std::string path, std::map<std::string, std::string> env);
     ~Cgi(void);
     void run(void);
     std::string getResponse(void) const;

@@ -9,6 +9,7 @@
 
 #include "./Method.hpp"
 #include "./Response.hpp"
+#include "./Cgi.hpp"
 
 ft::Method *ft::Method::getRequest(std::string method) {
     if (!method.compare("GET"))
@@ -171,11 +172,19 @@ void setBodyErrorPage(ft::Config::Server *server, ft::Response& res, int code) {
     }
 }
 
-void setBody(ft::Config::Server *server, ft::Response &res, std::ifstream &file) {
+void setBody(ft::Config::Server *server,
+             ft::Response &res,
+             std::ifstream &file,
+             const ft::Server::headerType &header) {
     std::stringstream buffer;
+
     if (file.is_open() == false) {
         res.setStatusLine(HTTP_STATUS_NOT_FOUND);
         setBodyErrorPage(server, res, 404);
+    } else if (res.getPath().find(".py") != std::string::npos) {
+        ft::Cgi cgi(res.getPath(), header);
+        cgi.run();
+        res.setBody(cgi.getResponse());
     } else {
         buffer << file.rdbuf();
         res.setBody(buffer.str());
@@ -208,16 +217,18 @@ std::string ft::get::buildResponse(
     ft::Response res;
     std::ifstream file;
 
-    (void)body;
     if (server == NULL) {
         res.setStatusLine(HTTP_STATUS_BAD_REQUEST);
-        res.setPath(".html");
-        res.setBody("<html><body><h1>Bad request</h1></body></html>");
+        res.setHeader(buildHeader(res.getBody(), res.getPath()));
+        return (res.makeResponse());
+    }
+    if (body.size() > server->client_max_body_size) {
+        res.setStatusLine(HTTP_STATUS_REQUEST_ENTITY_TOO_LARGE);
         res.setHeader(buildHeader(res.getBody(), res.getPath()));
         return (res.makeResponse());
     }
     openFile(file, header.at("Uri"), server, res);
-    setBody(server, res, file);
+    setBody(server, res, file, header);
     res.setHeader(buildHeader(res.getBody(), res.getPath()));
     return (res.makeResponse());
 }
@@ -227,8 +238,12 @@ void createFile(std::string &path,
     std::ofstream newFile;
 
     newFile.open(path.c_str());
-    newFile << body;
-    newFile.close();
+    if (newFile.is_open()) {
+        newFile << body;
+        newFile.close();
+    } else {
+        throw std::exception();
+    }
 }
 
 std::string ft::post::buildResponse(
@@ -244,6 +259,11 @@ std::string ft::post::buildResponse(
         res.setHeader(buildHeader(res.getBody(), res.getPath()));
         return (res.makeResponse());
     }
+    if (body.size() > server->client_max_body_size) {
+        res.setStatusLine(HTTP_STATUS_REQUEST_ENTITY_TOO_LARGE);
+        res.setHeader(buildHeader(res.getBody(), res.getPath()));
+        return (res.makeResponse());
+    }
     filePath = createFilePath(server->root, header.at("Uri"));
     res.setPath(filePath);
     file.open(filePath.c_str());
@@ -251,9 +271,14 @@ std::string ft::post::buildResponse(
         res.setStatusLine(HTTP_STATUS_SEE_OTHER);
         res.setHeader(buildHeaderPost(res.getBody(), res.getPath()));
     } else {
-        createFile(filePath, body);
-        res.setStatusLine(HTTP_STATUS_CREATED);
-        res.setHeader(buildHeaderPost(res.getBody(), res.getPath()));
+        try {
+            createFile(filePath, body);
+            res.setStatusLine(HTTP_STATUS_CREATED);
+            res.setHeader(buildHeaderPost(res.getBody(), res.getPath()));
+        } catch (std::exception &e) {
+            res.setStatusLine(HTTP_STATUS_INTERNAL_SERVER_ERROR);
+            res.setHeader(buildHeader(res.getBody(), res.getPath()));
+        }
     }
     return (res.makeResponse());
 }

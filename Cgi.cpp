@@ -17,7 +17,7 @@ std::string toUpperUnderscore(std::string str) {
 }
 
 
-ft::Cgi::Cgi(std::string const path,
+ft::Cgi::Cgi(std::string path,
              std::map<std::string, std::string> env) {
     this->_path = path;
     this->createEnv();
@@ -96,7 +96,7 @@ char **ft::Cgi::createEnvp(void) {
     std::vector<std::string> envp;
 
     while (it != ite) {
-        envp.push_back(reinterpret_cast<char *>((it->first + "=" + it->second).c_str()));
+        envp.push_back(reinterpret_cast<const char *>((it->first + "=" + it->second).c_str()));
         it++;
     }
     return (vectorToChar(envp));
