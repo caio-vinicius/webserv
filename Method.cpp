@@ -122,11 +122,23 @@ std::string getErrorPage(ft::Config::Server *server, int code) {
     return (errorPage);
 }
 
+std::string makeHtml(std::string statusLine) {
+    std::string html;
+    std::stringstream ss;
+
+    ss << "<html><head><title>" << \
+    statusLine << "</title></head><body><center><h1>" << \
+    statusLine << "</h1></center><hr><center>42webserv/1.0</center></body></html>";
+    html = ss.str();
+    return (html);
+}
+
 void setBodyErrorPage(ft::Config::Server *server, ft::Response& res, int code) {
     std::ifstream file;
     std::stringstream buffer;
     std::string errorPage = getErrorPage(server, code);
     res.setPath(createFilePath(server->root, errorPage));
+
     if (!errorPage.empty()) {
         file.open(res.getPath().c_str());
     }
@@ -135,7 +147,7 @@ void setBodyErrorPage(ft::Config::Server *server, ft::Response& res, int code) {
         res.setBody(buffer.str());
         file.close();
     } else {
-        res.setBody("<html><body><h1>Pensonalizned body</h1></body></html>");
+        res.setBody(makeHtml(res.getStatusLine()));
     }
 }
 
@@ -168,11 +180,13 @@ std::string ft::Get::buildResponse(
 
     if (server == NULL) {
         res.setStatusLine(HTTP_STATUS_BAD_REQUEST);
+        setBodyErrorPage(server, res, 400);
         res.setHeader(buildHeader(res.getBody(), res.getPath()));
         return (res.makeResponse());
     }
     if (body.size() > server->client_max_body_size) {
         res.setStatusLine(HTTP_STATUS_REQUEST_ENTITY_TOO_LARGE);
+        setBodyErrorPage(server, res, 413);
         res.setHeader(buildHeader(res.getBody(), res.getPath()));
         return (res.makeResponse());
     }
@@ -205,11 +219,13 @@ std::string ft::Post::buildResponse(
 
     if (server == NULL) {
         res.setStatusLine(HTTP_STATUS_BAD_REQUEST);
+        setBodyErrorPage(server, res, 400);
         res.setHeader(buildHeader(res.getBody(), res.getPath()));
         return (res.makeResponse());
     }
     if (body.size() > server->client_max_body_size) {
         res.setStatusLine(HTTP_STATUS_REQUEST_ENTITY_TOO_LARGE);
+        setBodyErrorPage(server, res, 413);
         res.setHeader(buildHeader(res.getBody(), res.getPath()));
         return (res.makeResponse());
     }
@@ -218,14 +234,17 @@ std::string ft::Post::buildResponse(
     file.open(filePath.c_str());
     if (file.is_open()) {
         res.setStatusLine(HTTP_STATUS_SEE_OTHER);
+        setBodyErrorPage(server, res, 303);
         res.setHeader(buildHeaderPost(res.getBody(), res.getPath()));
     } else {
         try {
             createFile(filePath, body);
             res.setStatusLine(HTTP_STATUS_CREATED);
+            setBodyErrorPage(server, res, 201);
             res.setHeader(buildHeaderPost(res.getBody(), res.getPath()));
         } catch (std::exception &e) {
             res.setStatusLine(HTTP_STATUS_INTERNAL_SERVER_ERROR);
+            setBodyErrorPage(server, res, 500);
             res.setHeader(buildHeader(res.getBody(), res.getPath()));
         }
     }
@@ -243,11 +262,13 @@ std::string ft::Delete::buildResponse(
 
     if (server == NULL) {
         res.setStatusLine(HTTP_STATUS_BAD_REQUEST);
+        setBodyErrorPage(server, res, 400);
         res.setHeader(buildHeader(res.getBody(), res.getPath()));
         return (res.makeResponse());
     }
     if (body.size() > server->client_max_body_size) {
         res.setStatusLine(HTTP_STATUS_REQUEST_ENTITY_TOO_LARGE);
+        setBodyErrorPage(server, res, 413);
         res.setHeader(buildHeader(res.getBody(), res.getPath()));
         return (res.makeResponse());
     }
@@ -258,13 +279,16 @@ std::string ft::Delete::buildResponse(
     if (file.is_open()) {
         if (std::remove(filePath.c_str())) {
             res.setStatusLine(HTTP_STATUS_INTERNAL_SERVER_ERROR);
+            setBodyErrorPage(server, res, 500);
             res.setHeader(buildHeaderPost(res.getBody(), res.getPath()));
         } else {
             res.setStatusLine(HTTP_STATUS_NO_CONTENT);
+            setBodyErrorPage(server, res, 204);
             res.setHeader(buildHeaderPost(res.getBody(), res.getPath()));
         }
     } else {
         res.setStatusLine(HTTP_STATUS_NOT_FOUND);
+        setBodyErrorPage(server, res, 404);
         res.setHeader(buildHeaderPost(res.getBody(), res.getPath()));
     }
     file.close();
@@ -281,10 +305,12 @@ std::string ft::MethodNotAllowed::buildResponse(
     (void)body;
     if (server == NULL) {
         res.setStatusLine(HTTP_STATUS_BAD_REQUEST);
+        setBodyErrorPage(server, res, 400);
         res.setHeader(buildHeader(res.getBody(), res.getPath()));
         return (res.makeResponse());
     }
     res.setStatusLine(HTTP_STATUS_METHOD_NOT_ALLOWED);
+    setBodyErrorPage(server, res, 405);
     res.setHeader(buildHeader(res.getBody(), res.getPath()));
     return (res.makeResponse());
 }
