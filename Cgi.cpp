@@ -18,8 +18,10 @@ std::string toUpperUnderscore(std::string str) {
 
 
 ft::Cgi::Cgi(std::string path,
-             std::map<std::string, std::string> env) {
+             std::map<std::string, std::string> env,
+             std::string body) {
     this->_path = path;
+    this->_body = body;
     this->createEnv();
 
     std::map<std::string, std::string>::iterator it = env.begin();
@@ -58,6 +60,10 @@ void ft::Cgi::createPipe(void) {
     if (pipe(this->_pipe_fd) == -1) {
         // throw ft::Cgi::PipeError();
         std::cout << "Pipe error" << std::endl;
+    }
+    if (pipe(this->_pipe_fd2) == -1) {
+        // throw ft::Cgi::PipeError();
+        std::cout << "Pipe 2 error" << std::endl;
     }
 }
 
@@ -105,6 +111,8 @@ char **ft::Cgi::createEnvp(void) {
 
 void ft::Cgi::runChild(void) {
     dup2(this->_pipe_fd[1], STDOUT_FILENO);
+    //write(this->_pipe_fd[1], this->_body.c_str(), this->_body.size());
+    //write(this->_pipe_fd2[1], this->_body.c_str(), this->_body.size());
     char **argv = this->createArgv();
     char **envp = this->createEnvp();
     execve("/usr/bin/python3", argv, envp);

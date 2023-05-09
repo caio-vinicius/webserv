@@ -154,14 +154,16 @@ void setBodyErrorPage(ft::Config::Server *server, ft::Response& res, int code) {
 void setBody(ft::Config::Server *server,
              ft::Response &res,
              std::ifstream &file,
-             const ft::Server::headerType &header) {
+             const ft::Server::headerType &header,
+             const ft::Server::bodyType &body) {
     std::stringstream buffer;
 
     if (file.is_open() == false) {
         res.setStatusLine(HTTP_STATUS_NOT_FOUND);
         setBodyErrorPage(server, res, 404);
     } else if (res.getPath().find(".py") != std::string::npos) {
-        ft::Cgi cgi(res.getPath(), header);
+        ft::Cgi cgi(res.getPath(), header, body);
+        std::cout << "CGI: " << body << std::endl;
         cgi.run();
         res.setBody(cgi.getResponse());
     } else {
@@ -191,7 +193,7 @@ std::string ft::Get::buildResponse(
         return (res.makeResponse());
     }
     openFile(file, header.at("Uri"), server, res);
-    setBody(server, res, file, header);
+    setBody(server, res, file, header, body);
     res.setHeader(buildHeader(res.getBody(), res.getPath()));
     return (res.makeResponse());
 }
@@ -234,7 +236,7 @@ std::string ft::Post::buildResponse(
     file.open(filePath.c_str());
     if (file.is_open()) {
         res.setStatusLine(HTTP_STATUS_SEE_OTHER);
-        setBodyErrorPage(server, res, 303);
+        setBody(server, res, file, header, body);
         res.setHeader(buildHeaderPost(res.getBody(), res.getPath()));
     } else {
         try {
