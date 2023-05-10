@@ -3,9 +3,8 @@
 import os
 import sys
 
-print("Content-Type: text/html\r\n\r\n")
-
 name = os.environ['QUERY_STRING']
-print(f"<html><head><title>Hello, {name}!</title></head><body>")
-print("<h1>Hello, World!</h1>")
+str_list = name.split("=")
+print("<html><head><title>Hello!</title></head><body>")
+print(f"<h1>Hello, {str_list[1]}!</h1>")
 print("</body></html>")
