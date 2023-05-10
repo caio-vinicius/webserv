@@ -74,7 +74,6 @@ void loadRequestLine(std::istringstream &ss,
     if (v.at(1).find("?") != std::string::npos) {
         header["Query-String"] = v.at(1).substr(v.at(1).find("?") + 1);
     }
-
     header["Version"] = v.at(2);
 }
 

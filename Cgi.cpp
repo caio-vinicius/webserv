@@ -16,16 +16,16 @@ std::string toUpperUnderscore(std::string str) {
     return (result);
 }
 
-
 ft::Cgi::Cgi(std::string path,
-             std::map<std::string, std::string> env,
+             std::map<std::string, std::string> header,
              std::string body) {
     this->_path = path;
+    this->_header = header;
     this->_body = body;
     this->createEnv();
 
-    std::map<std::string, std::string>::iterator it = env.begin();
-    std::map<std::string, std::string>::iterator ite = env.end();
+    std::map<std::string, std::string>::iterator it = header.begin();
+    std::map<std::string, std::string>::iterator ite = header.end();
 
     while (it != ite) {
         this->_env[toUpperUnderscore(it->first)] = it->second;
@@ -40,7 +40,7 @@ void ft::Cgi::createEnv(void) {
     this->_env["CONTENT_LENGTH"] = "";
     this->_env["CONTENT_TYPE"] = "";
     this->_env["GATEWAY_INTERFACE"] = "CGI/1.1";
-    this->_env["PATH_INFO"] = "";
+    this->_env["PATH_INFO"] = this->_header["Uri"];
     this->_env["PATH_TRANSLATED"] = "";
     this->_env["QUERY_STRING"] = this->_body;
     this->_env["REMOTE_ADDR"] = "";

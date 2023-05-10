@@ -27,6 +27,7 @@ class Cgi {
     char **_argv;
     std::map<std::string, std::string> _env;
     std::string _path;
+    std::map<std::string, std::string> _header;
     std::string _body;
     std::string _response;
 
