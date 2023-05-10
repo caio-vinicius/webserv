@@ -150,7 +150,7 @@ void    ft::Server::waitConnections(int *client_fd, int *server_fd) {
         it_sockets != this->_sockets.end(); it_sockets++) {
         pollfd fd;
         fd.fd = *it_sockets;
-        fd.events = POLLIN;
+        fd.events = POLLIN | POLLOUT;
         pfds.push_back(fd);
     }
     ret = poll(&pfds[0], pfds.size(), -1);
@@ -160,7 +160,7 @@ void    ft::Server::waitConnections(int *client_fd, int *server_fd) {
         std::cout << "Timeout" << std::endl;
     }
     for (size_t i = 0; i < pfds.size(); i++) {
-        if (pfds[i].revents & POLLIN) {
+        if (pfds[i].revents & POLLIN || pfds[i].revents & POLLOUT) {
             sockaddr_in address;
             socklen_t address_len = sizeof(address);
             *server_fd = this->_sockets[i];
