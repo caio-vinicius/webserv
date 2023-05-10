@@ -42,7 +42,7 @@ void ft::Cgi::createEnv(void) {
     this->_env["GATEWAY_INTERFACE"] = "CGI/1.1";
     this->_env["PATH_INFO"] = "";
     this->_env["PATH_TRANSLATED"] = "";
-    this->_env["QUERY_STRING"] = "";
+    this->_env["QUERY_STRING"] = this->_body;
     this->_env["REMOTE_ADDR"] = "";
     this->_env["REMOTE_IDENT"] = "";
     this->_env["REMOTE_USER"] = "";
@@ -60,10 +60,6 @@ void ft::Cgi::createPipe(void) {
     if (pipe(this->_pipe_fd) == -1) {
         // throw ft::Cgi::PipeError();
         std::cout << "Pipe error" << std::endl;
-    }
-    if (pipe(this->_pipe_fd2) == -1) {
-        // throw ft::Cgi::PipeError();
-        std::cout << "Pipe 2 error" << std::endl;
     }
 }
 
@@ -106,13 +102,12 @@ char **ft::Cgi::createEnvp(void) {
             + it->second).c_str()));
         it++;
     }
+
     return (vectorToChar(envp));
 }
 
 void ft::Cgi::runChild(void) {
     dup2(this->_pipe_fd[1], STDOUT_FILENO);
-    //write(this->_pipe_fd[1], this->_body.c_str(), this->_body.size());
-    //write(this->_pipe_fd2[1], this->_body.c_str(), this->_body.size());
     char **argv = this->createArgv();
     char **envp = this->createEnvp();
     execve("/usr/bin/python3", argv, envp);

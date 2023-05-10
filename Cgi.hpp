@@ -23,7 +23,6 @@ class Cgi {
     std::string getResponse(void) const;
  private:
     int _pipe_fd[2];
-    int _pipe_fd2[2];
     int _pid;
     char **_argv;
     std::map<std::string, std::string> _env;

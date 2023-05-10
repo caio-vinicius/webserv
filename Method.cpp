@@ -235,19 +235,23 @@ std::string ft::Post::buildResponse(
     res.setPath(filePath);
     file.open(filePath.c_str());
     if (file.is_open()) {
-        res.setStatusLine(HTTP_STATUS_SEE_OTHER);
+        if (res.getPath().find(".py") != std::string::npos) {
+            res.setStatusLine(HTTP_STATUS_CREATED);
+        } else {
+            res.setStatusLine(HTTP_STATUS_SEE_OTHER);
+        }
         setBody(server, res, file, header, body);
-        res.setHeader(buildHeaderPost(res.getBody(), res.getPath()));
+        res.setHeader(buildHeaderPost(res.getBody(),  header.at("Uri")));
     } else {
         try {
             createFile(filePath, body);
             res.setStatusLine(HTTP_STATUS_CREATED);
             setBodyErrorPage(server, res, 201);
-            res.setHeader(buildHeaderPost(res.getBody(), res.getPath()));
+            res.setHeader(buildHeaderPost(res.getBody(),  header.at("Uri")));
         } catch (std::exception &e) {
             res.setStatusLine(HTTP_STATUS_INTERNAL_SERVER_ERROR);
             setBodyErrorPage(server, res, 500);
-            res.setHeader(buildHeader(res.getBody(), res.getPath()));
+            res.setHeader(buildHeader(res.getBody(),  header.at("Uri")));
         }
     }
     file.close();

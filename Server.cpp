@@ -70,7 +70,11 @@ void loadRequestLine(std::istringstream &ss,
     requestLine = utils::removeChr(requestLine, '\r');
     std::vector<std::string> v = utils::split(&requestLine, SP);
     header["Method"] = v.at(0);
-    header["Uri"] = v.at(1);
+    header["Uri"] = v.at(1).substr(0, v.at(1).find("?"));
+    if (v.at(1).find("?") != std::string::npos) {
+        header["Query-String"] = v.at(1).substr(v.at(1).find("?") + 1);
+    }
+
     header["Version"] = v.at(2);
 }
 
