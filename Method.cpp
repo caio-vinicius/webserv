@@ -5,6 +5,7 @@
 #include <sstream>
 #include <string>
 #include <algorithm>
+#include <dirent.h>
 
 #include "./Method.hpp"
 #include "./Response.hpp"
@@ -173,6 +174,28 @@ void setBody(ft::Config::Server *server,
     }
 }
 
+std::string getAutoIndex(std::string root, std::string uri) {
+    std::string path = createFilePath(root, uri);
+
+    DIR *dir;
+    struct dirent *ent;
+    std::stringstream ss;
+
+    if ((dir = opendir(path.c_str())) != NULL) {
+        ss << "<html><head><title>Index of " << uri << "</title></head><body><h1>Index of " << uri << "</h1><hr><pre>";
+        while ((ent = readdir(dir)) != NULL) {
+            //if (ent->d_name[0] != '.') {
+            //    ss << "<a href=\"" << uri << "\">" << ent->d_name << "</a><br>";
+            //} else {
+            ss << "<a href=\"" << uri << "/" << ent->d_name << "\">" << ent->d_name << "</a><br>";
+            //}
+        }
+        ss << "</pre><hr><center>42webserv/1.0</center></body></html>";
+        closedir(dir);
+    }
+    return (ss.str());
+}
+
 std::string ft::Get::buildResponse(
     const ft::Server::headerType &header,
     const ft::Server::bodyType &body,
@@ -189,6 +212,15 @@ std::string ft::Get::buildResponse(
     if (body.size() > server->client_max_body_size) {
         res.setStatusLine(HTTP_STATUS_REQUEST_ENTITY_TOO_LARGE);
         setBodyErrorPage(server, res, 413);
+        res.setHeader(buildHeader(res.getBody(), res.getPath()));
+        return (res.makeResponse());
+    }
+
+    ft::Config::Server::Location *location;
+    location = getLocation(server, header.at("Uri"));
+    if (location->autoindex == true) {
+        res.setStatusLine(HTTP_STATUS_OK);
+        res.setBody(getAutoIndex(server->root, header.at("Uri")));
         res.setHeader(buildHeader(res.getBody(), res.getPath()));
         return (res.makeResponse());
     }
