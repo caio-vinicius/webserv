@@ -17,10 +17,12 @@
 namespace ft {
 class Cgi {
  public:
-    Cgi(std::string path, std::map<std::string, std::string> env, std::string body);
+    Cgi(std::string path, std::map<std::string,
+        std::string> env, std::string body);
     ~Cgi(void);
     void run(void);
     std::string getResponse(void) const;
+
  private:
     int _pipe_fd[2];
     int _pid;
