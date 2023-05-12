@@ -27,8 +27,6 @@
 
 
 ft::Server::Server(Config config): _config(config) {
-    std::cout << "Server created" << std::endl << std::endl;
-
     ft::Config::servers server = config.server;
     this->_sockets = this->createSockets(server);
 }
@@ -94,6 +92,46 @@ void loadHeader(std::istringstream &ss,
     }
 }
 
+bool isChunkedRequest(ft::Server::headerType &header) {
+    if (header.at("Method").compare("POST") == 0
+        && header.count("Content-Length") == 0
+        && header.count("Transfer-Encoding") != 0
+        && header.at("Transfer-Encoding").compare("chunked") == 0) {
+        return true;
+    }
+    return false;
+}
+
+std::string getBodySize(ft::Server::bodyType &body) {
+    std::stringstream ss;
+
+    ss << body.size();
+    return ss.str();
+}
+
+void loadChunkedBody(std::istringstream &ss,
+              ft::Server::bodyType &body) {
+    std::string line;
+    std::string buffer;
+    std::string hex;
+    size_t bufferSize;
+
+    std::getline(ss, line);
+    std::getline(ss, line, '\0');
+
+    while (!line.empty()) {
+        hex = line.substr(0, line.find_first_of(CRLF));
+        line.erase(0, (hex.size() + 2));
+        bufferSize = utils::hexToDec(hex);
+        if (bufferSize == 0)
+            break;
+        buffer.append(line.substr(0, bufferSize));
+        line.erase(0, (bufferSize + 2));
+    }
+
+    body = buffer;
+}
+
 void loadBody(std::istringstream &ss,
               ft::Server::bodyType &body) {
     std::string line;
@@ -109,7 +147,12 @@ void loadRequest(char *buffer,
 
     loadRequestLine(ss, header);
     loadHeader(ss, header);
-    loadBody(ss, body);
+    if (isChunkedRequest(header)) {
+        loadChunkedBody(ss, body);
+        header["Content-Length"] = getBodySize(body);
+    } else {
+        loadBody(ss, body);
+    }
 }
 
 void ft::Server::handleConnection(int client_fd, int server_fd) {
@@ -123,7 +166,7 @@ void ft::Server::handleConnection(int client_fd, int server_fd) {
         perror("Erro ao aceitar o cliente");
         exit(1);
     } else {
-        std::cout << "Getting response" << std::endl;
+        std::cout << "Getting Request" << std::endl;
         ret = recv(client_fd, buffer, sizeof(buffer), 0);
         if (ret < 0) {
             perror("Erro ao receber a mensagem");
@@ -137,6 +180,7 @@ void ft::Server::handleConnection(int client_fd, int server_fd) {
         server = getServer(server_fd, &header);
         Method *req = ft::Method::getRequest(header["Method"]);
         std::string res = req->buildResponse(header, body, server);
+        std::cout << "Sending Response in: " << header.at("Host") << std::endl;
         send(client_fd, res.c_str(), res.size(), 0);
         close(client_fd);
     }
@@ -230,6 +274,8 @@ std::vector<int> ft::Server::createSockets(Config::servers server) {
             perror("Erro ao ligar o listen");
             exit(1);
         }
+
+        std::cout << "Server Listening on Port: " << port << std::endl;
         sockets.push_back(socket_fd);
         for (size_t i = 0; i < it->second.size(); i++) {
             this->_config.server.at(it->first).at(i).fd = socket_fd;

@@ -233,6 +233,7 @@ void ft::Config::parse(std::string path) {
         throw std::runtime_error("File not found");
     }
 
+    std::cout << "Loading Server Config" << std::endl;
     std::string line;
     while (getline(file, line)) {
         std::istringstream iss(line);

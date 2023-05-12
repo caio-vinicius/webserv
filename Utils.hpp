@@ -16,6 +16,7 @@ void trim(std::string *str);
 std::vector<std::string> split(std::string *str, char delimiter);
 std::string getAddress(std::string listen_t);
 int getPort(std::string listen_t);
+int hexToDec(std::string hex);
 
 }  // namespace utils
 

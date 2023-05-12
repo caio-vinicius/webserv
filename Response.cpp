@@ -52,7 +52,6 @@ std::string ft::Response::makeResponse(void) {
         + this->getStatusLine() + CRLF;
     response += this->getHeader() + CRLF;
     response += this->getBody();
-    std::cout << "Response: " << std::endl << response << std::endl;
     return response;
 }
 

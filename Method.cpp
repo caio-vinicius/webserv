@@ -28,7 +28,6 @@ std::string buildHeader(const std::string &buffer, std::string path) {
     std::stringstream   ss;
 
     extension = path.substr(path.find_last_of(".") + 1);
-    std::cout << extension << std::endl;
     std::map <std::string, std::string> mime_types;
     mime_types["html"] = "text/html";
     mime_types["css"] = "text/css";
@@ -165,7 +164,6 @@ void setBody(ft::Config::Server *server,
         setBodyErrorPage(server, res, 404);
     } else if (res.getPath().find(".py") != std::string::npos) {
         ft::Cgi cgi(res.getPath(), header, body);
-        std::cout << "CGI: " << body << std::endl;
         cgi.run();
         res.setBody(cgi.getResponse());
     } else {
@@ -258,6 +256,14 @@ void createFile(std::string &path,
     }
 }
 
+std::string postErrorRespose(ft::Config::Server *server, ft::Response res,
+    std::string statusLine, int statusCode) {
+    res.setStatusLine(statusLine);
+    setBodyErrorPage(server, res, statusCode);
+    res.setHeader(buildHeader(res.getBody(), res.getPath()));
+    return (res.makeResponse());
+}
+
 std::string ft::Post::buildResponse(
     const ft::Server::headerType &header,
     const ft::Server::bodyType &body,
@@ -267,17 +273,16 @@ std::string ft::Post::buildResponse(
     std::ifstream file;
 
     if (server == NULL) {
-        res.setStatusLine(HTTP_STATUS_BAD_REQUEST);
-        setBodyErrorPage(server, res, 400);
-        res.setHeader(buildHeader(res.getBody(), res.getPath()));
-        return (res.makeResponse());
+        return postErrorRespose(server, res, HTTP_STATUS_BAD_REQUEST, 400);
+    }
+    if (header.count("Content-Length") == 0) {
+        return postErrorRespose(server, res,HTTP_STATUS_LENGTH_REQUIRED, 411);
     }
     if (body.size() > server->client_max_body_size) {
-        res.setStatusLine(HTTP_STATUS_REQUEST_ENTITY_TOO_LARGE);
-        setBodyErrorPage(server, res, 413);
-        res.setHeader(buildHeader(res.getBody(), res.getPath()));
-        return (res.makeResponse());
+        return postErrorRespose(server, res,
+            HTTP_STATUS_REQUEST_ENTITY_TOO_LARGE, 413);
     }
+
     filePath = createFilePath(server->root, header.at("Uri"));
     res.setPath(filePath);
     file.open(filePath.c_str());
