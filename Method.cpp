@@ -218,8 +218,8 @@ std::string ft::Get::buildResponse(
 
     if (server == NULL) {
         res.setStatusLine(HTTP_STATUS_BAD_REQUEST);
-        setBodyErrorPage(server, res, 400);
-        res.setHeader(buildHeader(res.getBody(), res.getPath()));
+        res.setBody(makeHtml(res.getStatusLine()));
+        res.setHeader(buildHeader(res.getBody(), ".html"));
         return (res.makeResponse());
     }
     if (body.size() > server->client_max_body_size) {
@@ -273,7 +273,10 @@ std::string ft::Post::buildResponse(
     std::ifstream file;
 
     if (server == NULL) {
-        return postErrorRespose(server, res, HTTP_STATUS_BAD_REQUEST, 400);
+        res.setStatusLine(HTTP_STATUS_BAD_REQUEST);
+        res.setBody(makeHtml(res.getStatusLine()));
+        res.setHeader(buildHeader(res.getBody(), ".html"));
+        return (res.makeResponse());
     }
     if (header.count("Content-Length") == 0) {
         return postErrorRespose(server, res,HTTP_STATUS_LENGTH_REQUIRED, 411);
@@ -320,8 +323,8 @@ std::string ft::Delete::buildResponse(
 
     if (server == NULL) {
         res.setStatusLine(HTTP_STATUS_BAD_REQUEST);
-        setBodyErrorPage(server, res, 400);
-        res.setHeader(buildHeader(res.getBody(), res.getPath()));
+        res.setBody(makeHtml(res.getStatusLine()));
+        res.setHeader(buildHeader(res.getBody(), ".html"));
         return (res.makeResponse());
     }
     if (body.size() > server->client_max_body_size) {
@@ -363,8 +366,8 @@ std::string ft::MethodNotAllowed::buildResponse(
     (void)body;
     if (server == NULL) {
         res.setStatusLine(HTTP_STATUS_BAD_REQUEST);
-        setBodyErrorPage(server, res, 400);
-        res.setHeader(buildHeader(res.getBody(), res.getPath()));
+        res.setBody(makeHtml(res.getStatusLine()));
+        res.setHeader(buildHeader(res.getBody(), ".html"));
         return (res.makeResponse());
     }
     res.setStatusLine(HTTP_STATUS_METHOD_NOT_ALLOWED);

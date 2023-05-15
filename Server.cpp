@@ -180,7 +180,6 @@ void ft::Server::handleConnection(int client_fd, int server_fd) {
         server = getServer(server_fd, &header);
         Method *req = ft::Method::getRequest(header["Method"]);
         std::string res = req->buildResponse(header, body, server);
-        std::cout << "Sending Response in: " << header.at("Host") << std::endl;
         send(client_fd, res.c_str(), res.size(), 0);
         close(client_fd);
     }
