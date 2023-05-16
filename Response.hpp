@@ -57,6 +57,7 @@ namespace ft {
 class Response {
  public:
         Response(void);
+        ~Response(void);
         void setHeader(std::string header);
         void setBody(std::string body);
         void setStatusLine(std::string status_line);
@@ -69,7 +70,6 @@ class Response {
         std::string getPath(void);
         std::string getDefaultErrorPage(std::string status_code);
         std::string makeResponse(void);
-        ~Response(void);
  private:
         std::string _path;
         std::string _header;

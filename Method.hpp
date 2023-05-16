@@ -24,7 +24,7 @@ class Method {
         const ft::Server::headerType &header,
         const ft::Server::bodyType &body,
         ft::Config::Server *server) = 0;
-    ~Method() {}
+    virtual ~Method() {}
 };
 
 class Get : public Method {

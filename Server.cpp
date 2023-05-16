@@ -46,12 +46,15 @@ void handle_signal(int) {
 void ft::Server::run() {
     int client_fd, server_fd;
     struct sigaction sa;
+    server_fd = 0;
+    client_fd = 0;
 
     memset(&sa, 0, sizeof(sa));
     sa.sa_handler = handle_signal;
     sigaction(SIGINT, &sa, NULL);
 
     while (!ft::quit) {
+        client_fd = 0;
         this->waitConnections(&client_fd, &server_fd);
         if (client_fd > 0) {
             this->handleConnection(client_fd, server_fd);
@@ -182,6 +185,7 @@ void ft::Server::handleConnection(int client_fd, int server_fd) {
         std::string res = req->buildResponse(header, body, server);
         send(client_fd, res.c_str(), res.size(), 0);
         close(client_fd);
+        delete (req);
     }
 }
 
@@ -194,6 +198,7 @@ void    ft::Server::waitConnections(int *client_fd, int *server_fd) {
         pollfd fd;
         fd.fd = *it_sockets;
         fd.events = POLLIN | POLLOUT;
+        fd.revents = 0;
         pfds.push_back(fd);
     }
     ret = poll(&pfds[0], pfds.size(), -1);
