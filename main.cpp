@@ -5,7 +5,7 @@
 #include "./includes/Server.hpp"
 
 int main(int argc, char **argv) {
-    const char* configFilePath = "./webserv.conf";
+    const char* configFilePath = "./conf/webserv.conf";
 
     if (argc > 2) {
         exit(EXIT_FAILURE);
