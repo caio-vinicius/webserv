@@ -44,6 +44,8 @@ std::string buildHeader(const std::string &buffer, std::string path) {
     ss << buffer.length();
     header += "Server: 42webserv/1.0";
     header += CRLF;
+    header += "Emoji: 🐴";
+    header += CRLF;
     header += "Content-Length: " + ss.str();
     header += CRLF;
     if (mime_types.count(extension) != 0) {
@@ -82,7 +84,7 @@ ft::Config::Server::Location *getLocation(ft::Config::Server *server,
 std::string createFilePath(std::string root, std::string uri) {
     std::string path;
 
-    path = "." + root + uri;
+    path = root + uri;
     return (path);
 }
 
@@ -296,6 +298,7 @@ std::string ft::Post::buildResponse(
             res.setStatusLine(HTTP_STATUS_SEE_OTHER);
         }
         setBody(server, res, file, header, body);
+        res.setBody("");
         res.setHeader(buildHeaderPost(res.getBody(),  header.at("Uri")));
     } else {
         try {

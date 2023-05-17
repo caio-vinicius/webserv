@@ -33,7 +33,7 @@ ft::Config::Server::Server() {
 
     param.clear();
     param.push_back("root");
-    param.push_back("html");
+    param.push_back("./www");
     processRoot(param);
 
     this->location["/"] = ft::Config::Server::Location();
@@ -65,8 +65,16 @@ void ft::Config::Server::processListen(std::vector<std::string> &param) {
     it++;
     while (it != param.end()) {
         address_port = utils::split(&*it, ':');
+        if (address_port.size() != 2) {
+            std::cerr << "webserv: [emerg] invalid address and port " << *it << std::endl;
+            exit(EXIT_FAILURE);
+        }
         listen.address = address_port[0];
         listen.port = std::atoi(address_port[1].c_str());
+        if (listen.port == 0) {
+            std::cerr << "webserv: [emerg] invalid port " << address_port[1] << std::endl;
+            exit(EXIT_FAILURE);
+        }
         this->listen.push_back(listen);
         it++;
     }
@@ -145,7 +153,7 @@ void ft::Config::Server::Location::processAutoindex(
     std::string autoindex;
 
     autoindex = param.back();
-    if (autoindex == "on") {
+    if (autoindex == "on" && param.size() == 2) {
         this->autoindex = true;
     } else {
         this->autoindex = false;
@@ -170,7 +178,7 @@ void ft::Config::parseLocation(
     while (std::getline(file, token, '\n')) {
         if (token.find("}") != std::string::npos) {
             server.location[current_location.uri] = current_location;
-            break;
+            return;
         }
         utils::trim(&token);
         param = utils::split(&token, ' ');
@@ -182,6 +190,9 @@ void ft::Config::parseLocation(
                 param[0] << "'" << std::endl;
         }
     }
+    std::cerr << "webserv: [emerg] unexpected end of file, " << \
+        "'}' missing" << std::endl;
+    exit(EXIT_FAILURE);
 }
 
 void ft::Config::parseServer(std::ifstream &file) {
@@ -231,7 +242,9 @@ void ft::Config::parseServer(std::ifstream &file) {
                 exit(EXIT_FAILURE);
         }
     }
-    std::cerr << "webserv: [emerg] syntax error server not closed" << std::endl;
+    std::cerr << "webserv: [emerg] unexpected end of file, " << \
+        "'}' missing" << std::endl;
+    exit(EXIT_FAILURE);
 }
 
 void ft::Config::parse(std::string path) {

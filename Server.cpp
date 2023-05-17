@@ -234,7 +234,7 @@ std::string ft::Server::getAddressByName(std::string name) {
     hints.ai_socktype = SOCK_STREAM;
 
     if ((status = getaddrinfo(name.c_str(), NULL, &hints, &res)) != 0) {
-        std::cerr << "getaddrinfo: " << gai_strerror(status) << std::endl;
+        std::cerr << "webserv: [emerg] " << gai_strerror(status) << std::endl;
         exit(1);
     }
 
@@ -255,14 +255,14 @@ std::vector<int> ft::Server::createSockets(Config::servers server) {
     for (Config::iterator it = server.begin() ; it != server.end(); it++) {
         int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
         if (socket_fd < 0) {
-            std::cout << "Error opening socket" << std::endl;
+            std::cout << "webserv: [emerg] Error opening socket" << std::endl;
             exit(1);
         }
         fcntl(socket_fd, F_SETFL, O_NONBLOCK);
         int opt = 1;
         if (setsockopt(socket_fd, SOL_SOCKET,
                 SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
-            perror("Erro ao abrir o setsockopt");
+            std::cout << "webserv: [emerg] Error opening socket" << std::endl;
             exit(1);
         }
 
@@ -276,10 +276,10 @@ std::vector<int> ft::Server::createSockets(Config::servers server) {
             this->getAddressByName(listen_t).c_str());
         serv_addr.sin_port = htons(port);
         if (bind(socket_fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr))) {
-            perror("Erro ao ligar o socket");
+            std::cout << "webserv: [emerg] Error opening socket" << std::endl;
             exit(1);
         } else if (listen(socket_fd, 5)) {
-            perror("Erro ao ligar o listen");
+            std::cout << "webserv: [emerg] Error opening listen" << std::endl;
             exit(1);
         }
 
