@@ -2,7 +2,7 @@ NAME = webserv
 
 
 MAIN := main.cpp
-SRCS := Utils.cpp Config.cpp Server.cpp Method.cpp Response.cpp Cgi.cpp
+SRCS := Utils.cpp Config.cpp Server.cpp Method.cpp Response.cpp Cgi.cpp Get.cpp Delete.cpp MethodNotAllowed.cpp Post.cpp
 
 CFLAGS := -Wall -Wextra -Wfatal-errors -std=c++98 -pedantic -g -pedantic-errors
 

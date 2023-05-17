@@ -4,13 +4,7 @@
 #ifndef METHOD_HPP_
 #define METHOD_HPP_
 
-#include <string>
-#include <map>
-#include <iostream>
-#include <cstring>
-
 #include "./Response.hpp"
-#include "./Config.hpp"
 #include "./Server.hpp"
 
 namespace ft {
@@ -25,6 +19,18 @@ class Method {
         const ft::Server::bodyType &body,
         ft::Config::Server *server) = 0;
     virtual ~Method() {}
+
+ protected:
+    void setBodyErrorPage(ft::Config::Server *server, ft::Response& res, int code);
+    void setBody(ft::Config::Server *server,
+             ft::Response &res,
+             std::ifstream &file,
+             const ft::Server::headerType &header,
+             const ft::Server::bodyType &body);
+    std::string makeHtml(std::string statusLine);
+    std::string buildHeader(const std::string &buffer, std::string path);
+    std::string createFilePath(std::string root, std::string uri);
+    std::string getErrorPage(ft::Config::Server *server, int code);
 };
 
 class Get : public Method {
@@ -35,6 +41,16 @@ class Get : public Method {
         const ft::Server::bodyType &body,
         ft::Config::Server *server);
     ~Get() {}
+
+ protected:
+    ft::Config::Server::Location *getLocation(ft::Config::Server *server,
+    std::string uri);
+    std::string getAutoIndex(std::string root, std::string uri);
+    bool isDirectory(std::string uri);
+    bool isCurrentDirectory(char *name);
+    void openFile(std::ifstream &file, std::string uri,
+        ft::Config::Server *server,
+        ft::Response &res);
 };
 
 class Post : public Method {
@@ -45,6 +61,13 @@ class Post : public Method {
         const ft::Server::bodyType &body,
         ft::Config::Server *server);
     ~Post() {}
+
+ protected:
+    std::string postErrorRespose(ft::Config::Server *server, ft::Response res,
+    std::string statusLine, int statusCode);
+    std::string buildHeaderPost(const std::string &buffer, std::string path);
+    void createFile(std::string &path,
+                const ft::Server::bodyType &body);
 };
 
 class Delete : public Method {
@@ -55,6 +78,9 @@ class Delete : public Method {
         const ft::Server::bodyType &body,
         ft::Config::Server *server);
     ~Delete() {}
+
+ protected:
+    std::string buildHeaderDelete(const std::string &buffer, std::string path);
 };
 
 class MethodNotAllowed : public Method {
