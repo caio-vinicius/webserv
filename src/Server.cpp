@@ -6,13 +6,13 @@
 #include "../includes/Response.hpp"
 #include "../includes/Config.hpp"
 
+bool ft::quit = false;
+
 ft::Server::Server(Config config): _config(config) {
     ft::Config::servers server = config.server;
     this->_sockets = this->createSockets(server);
-    if (this->_sockets.size() == 0) {
-        std::cout << "Error creating sockets" << std::endl;
-        exit(1);
-    }
+    if (this->_sockets.size() == 0)
+        ft::webservEmergError("No servers");
 }
 
 ft::Server::~Server() {
@@ -213,10 +213,8 @@ std::string ft::Server::getAddressByName(std::string name) {
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
 
-    if ((status = getaddrinfo(name.c_str(), NULL, &hints, &res)) != 0) {
-        std::cerr << "webserv: [emerg] " << gai_strerror(status) << std::endl;
-        exit(1);
-    }
+    if ((status = getaddrinfo(name.c_str(), NULL, &hints, &res)) != 0)
+        ft::webservEmergError(gai_strerror(status));
 
     struct sockaddr_in *ipv4 = (struct sockaddr_in *)res->ai_addr;
     void *addr = &(ipv4->sin_addr);
@@ -226,25 +224,19 @@ std::string ft::Server::getAddressByName(std::string name) {
     return (ip);
 }
 
-bool ft::quit = false;
-
 ft::Server::Server(void) {}
 
 std::vector<int> ft::Server::createSockets(Config::servers server) {
     std::vector<int> sockets;
     for (Config::iterator it = server.begin() ; it != server.end(); it++) {
         int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
-        if (socket_fd < 0) {
-            std::cout << "webserv: [emerg] Error opening socket" << std::endl;
-            exit(1);
-        }
+        if (socket_fd < 0)
+            ft::webservEmergError("Error opening socket");
         fcntl(socket_fd, F_SETFL, O_NONBLOCK);
         int opt = 1;
         if (setsockopt(socket_fd, SOL_SOCKET,
-                SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
-            std::cout << "webserv: [emerg] Error opening socket" << std::endl;
-            exit(1);
-        }
+                SO_REUSEADDR, &opt, sizeof(opt)) < 0)
+            ft::webservEmergError("Error opening socket");
 
         struct sockaddr_in serv_addr;
         std::string listen_t = utils::getAddress(it->first);
@@ -255,13 +247,10 @@ std::vector<int> ft::Server::createSockets(Config::servers server) {
         serv_addr.sin_addr.s_addr = inet_addr(
             this->getAddressByName(listen_t).c_str());
         serv_addr.sin_port = htons(port);
-        if (bind(socket_fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr))) {
-            std::cout << "webserv: [emerg] Error opening socket" << std::endl;
-            exit(1);
-        } else if (listen(socket_fd, 5)) {
-            std::cout << "webserv: [emerg] Error opening listen" << std::endl;
-            exit(1);
-        }
+        if (bind(socket_fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)))
+            ft::webservEmergError("Error opening socket");
+        else if (listen(socket_fd, 5))
+            ft::webservEmergError("Error opening socket");
 
         std::cout << "Server Listening on Port: " << port << std::endl;
         sockets.push_back(socket_fd);

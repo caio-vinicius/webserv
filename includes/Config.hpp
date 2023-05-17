@@ -83,6 +83,8 @@ class Config::Server::Location {
     bool autoindex;
 };  // class Config::Server::Location
 
+void webservEmergError(std::string cause);
+
 }  // namespace ft
 
 #endif  // CONFIG_HPP_
