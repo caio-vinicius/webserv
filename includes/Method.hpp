@@ -33,6 +33,7 @@ class Method {
     std::string buildHeader(const std::string &buffer, std::string path);
     std::string createFilePath(std::string root, std::string uri);
     std::string getErrorPage(ft::Config::Server *server, int code);
+    void BuildErrorResponse(ft::Response res, std::string reasonPhrase, ft::Config::Server *server, int statusCode);
 };
 
 class Get : public Method {

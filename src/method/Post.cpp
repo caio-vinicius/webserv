@@ -31,11 +31,10 @@ std::string ft::Post::buildResponse(
     res.setPath(filePath);
     file.open(filePath.c_str());
     if (file.is_open()) {
-        if (res.getPath().find(".py") != std::string::npos) {
+        if (res.getPath().find(".py") != std::string::npos)
             res.setStatusLine(HTTP_STATUS_CREATED);
-        } else {
+        else
             res.setStatusLine(HTTP_STATUS_SEE_OTHER);
-        }
         setBody(server, res, file, header, body);
         res.setBody("");
         res.setHeader(buildHeaderPost(res.getBody(),  header.at("Uri")));
@@ -60,6 +59,8 @@ std::string ft::Post::buildHeaderPost(const std::string &buffer, std::string pat
 
     (void)buffer;
     header += "Server: 42webserv/1.0";
+    header += CRLF;
+    header += "Emoji: 🐴";
     header += CRLF;
     header += "Location: " + path;
     header += CRLF;
@@ -86,4 +87,3 @@ void ft::Post::createFile(std::string &path,
         throw std::exception();
     }
 }
-

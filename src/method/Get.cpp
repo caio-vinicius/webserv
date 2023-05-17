@@ -78,18 +78,6 @@ std::string ft::Get::getAutoIndex(std::string root, std::string uri) {
     return (ss.str());
 }
 
-bool ft::Get::isDirectory(std::string uri) {
-    if (uri.find(".") != std::string::npos)
-        return false;
-    return true;
-}
-
-bool ft::Get::isCurrentDirectory(char *name) {
-    if (name[0] == '.' && name[1] == '\0')
-        return true;
-    return false;
-}
-
 void ft::Get::openFile(std::ifstream &file,
     std::string uri,
     ft::Config::Server *server,
@@ -111,4 +99,16 @@ void ft::Get::openFile(std::ifstream &file,
             }
         }
     }
+}
+
+bool ft::Get::isDirectory(std::string uri) {
+    if (uri.find(".") != std::string::npos)
+        return false;
+    return true;
+}
+
+bool ft::Get::isCurrentDirectory(char *name) {
+    if (name[0] == '.' && name[1] == '\0')
+        return true;
+    return false;
 }

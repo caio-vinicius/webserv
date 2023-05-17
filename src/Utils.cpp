@@ -42,15 +42,15 @@ std::string getAddress(std::string listen_t) {
 }
 
 int getPort(std::string listen_t) {
-    int n;
-    std::string port;
+    int port;
+    std::string portString;
     size_t pos = listen_t.find(":");
     if (pos != std::string::npos) {
-        port = listen_t.substr(pos + 1);
+        portString = listen_t.substr(pos + 1);
     }
-    std::istringstream stream(port);
-    stream >> n;
-    return (n);
+    std::istringstream stream(portString);
+    stream >> port;
+    return (port);
 }
 
 int hexToDec(std::string hex) {

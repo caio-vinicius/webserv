@@ -54,6 +54,8 @@ std::string ft::Delete::buildHeaderDelete(const std::string &buffer, std::string
     (void)buffer;
     header += "Server: 42webserv/1.0";
     header += CRLF;
+    header += "Emoji: 🐴";
+    header += CRLF;
     header += "Location: " + path;
     header += CRLF;
     return (header);
