@@ -45,6 +45,11 @@ void ft::Config::Server::processListen(std::vector<std::string> &param) {
     it = param.begin();
     it++;
     while (it != param.end()) {
+        if (*it == "default_server") {
+            this->default_server = true;
+            it++;
+            continue;
+        }
         address_port = utils::split(&*it, ':');
         if (address_port.size() != 2)
             ft::webservEmergError("invalid address and port " + *it);
@@ -79,9 +84,10 @@ void ft::Config::Server::processErrorPage(std::vector<std::string> &param) {
     int code = 0;
     while (it != param.end()) {
         code = std::atoi(it->c_str());
-        if (code) {
+        if (code && (code >= 300 && code <= 599)) {
             error_page.code.insert(code);
-        }
+        } else
+            ft::webservEmergError("value " + *it + " must be between 300 and 599");
         it++;
     }
     this->error_page.push_back(error_page);

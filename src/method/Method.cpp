@@ -71,7 +71,13 @@ void ft::Method::setBody(ft::Config::Server *server,
         setBodyErrorPage(server, res, 404);
     } else if (res.getPath().find(".py") != std::string::npos) {
         ft::Cgi cgi(res.getPath(), header, body);
-        cgi.run();
+        try {
+            cgi.run();
+        } catch (std::exception &e) {
+            res.setStatusLine(HTTP_STATUS_INTERNAL_SERVER_ERROR);
+            setBodyErrorPage(server, res, 500);
+            return;
+        }
         res.setBody(cgi.getResponse());
     } else {
         buffer << file.rdbuf();

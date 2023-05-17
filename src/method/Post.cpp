@@ -31,12 +31,13 @@ std::string ft::Post::buildResponse(
     res.setPath(filePath);
     file.open(filePath.c_str());
     if (file.is_open()) {
-        if (res.getPath().find(".py") != std::string::npos)
+        if (res.getPath().find(".py") != std::string::npos) {
             res.setStatusLine(HTTP_STATUS_CREATED);
-        else
+            setBodyErrorPage(server, res, 201);
+        } else {
             res.setStatusLine(HTTP_STATUS_SEE_OTHER);
-        setBody(server, res, file, header, body);
-        res.setBody("");
+            setBodyErrorPage(server, res, 303);
+        }
         res.setHeader(buildHeaderPost(res.getBody(),  header.at("Uri")));
     } else {
         try {

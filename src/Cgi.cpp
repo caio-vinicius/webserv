@@ -45,16 +45,14 @@ void ft::Cgi::createEnv(void) {
 
 void ft::Cgi::createPipe(void) {
     if (pipe(this->_pipe_fd) == -1) {
-        // throw ft::Cgi::PipeError();
-        std::cout << "Pipe error" << std::endl;
+        throw std::exception();
     }
 }
 
 void ft::Cgi::createProcess(void) {
     this->_pid = fork();
     if (this->_pid == -1) {
-        // throw ft::Cgi::ForkError();
-        std::cout << "Fork error" << std::endl;
+        throw std::exception();
     }
 }
 

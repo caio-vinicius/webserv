@@ -261,9 +261,10 @@ std::vector<int> ft::Server::createSockets(Config::servers server) {
     return (sockets);
 }
 
-ft::Config::Server *ft::Server::getServer(int server_fd,
+ft::Config::Server *ft::Server::getServer(
+    int server_fd,
     std::map<std::string, std::string> *header) {
-    ft::Config::iterator    it;
+    ft::Config::iterator it;
     if (!header->count("Host") || header->at("Host").empty()) {
         return NULL;
     }
@@ -283,6 +284,10 @@ ft::Config::Server *ft::Server::getServer(int server_fd,
         }
     }
 
-    // Lógica para Default_Server
+    for (size_t i = 0; i < it->second.size(); i++) {
+        if (it->second.at(i).default_server)
+            return (&it->second.at(i));
+    }
+
     return (&it->second.at(0));
 }
