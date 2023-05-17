@@ -42,6 +42,7 @@ class Cgi {
     void closeProcess(void);
     void runChild(void);
     void runParent(void);
+    std::string toUpperUnderscore(std::string str);
 };
 
 }  // namespace ft
