@@ -1,7 +1,7 @@
 /* Copyright (c) 2023 Caio Souza, Guilherme Martinelli, Luigi Ferrari. */
 /* All rights reserved. 42 */
 
-#include "./Response.hpp"
+#include "../includes/Response.hpp"
 
 ft::Response::Response(void): _header(""), _body(""),
      _status_line(HTTP_STATUS_OK) {}

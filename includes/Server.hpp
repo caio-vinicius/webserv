@@ -6,10 +6,14 @@
 
 #include <poll.h>
 #include <arpa/inet.h>
-#include <vector>
-#include <map>
-#include <string>
+#include <unistd.h>
+#include <signal.h>
+#include <fcntl.h>
+#include <netdb.h>
+
 #include <algorithm>
+#include <cstring>
+
 #include "./Config.hpp"
 #include "./Utils.hpp"
 

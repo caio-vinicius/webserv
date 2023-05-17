@@ -4,13 +4,16 @@
 #ifndef CONFIG_HPP_
 #define CONFIG_HPP_
 
-#include <string>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <stdint.h>
+
 #include <vector>
 #include <map>
 #include <iostream>
-#include <sstream>
-#include <cstdlib>
 #include <set>
+#include <fstream>
+
 namespace ft {
 
 class Config {
@@ -79,6 +82,8 @@ class Config::Server::Location {
     std::string uri;
     bool autoindex;
 };  // class Config::Server::Location
+
+void webservEmergError(std::string cause);
 
 }  // namespace ft
 

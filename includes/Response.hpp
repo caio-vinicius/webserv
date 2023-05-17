@@ -4,9 +4,6 @@
 #ifndef RESPONSE_HPP_
 #define RESPONSE_HPP_
 
-#include <cstddef>
-#include <string>
-
 #include "./Config.hpp"
 
 #define CRLF "\r\n"

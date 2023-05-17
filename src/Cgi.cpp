@@ -1,20 +1,7 @@
 /* Copyright (c) 2023 Caio Souza, Guilherme Martinelli, Luigi Ferrari. */
 /* All rights reserved. 42 */
 
-#include "./Cgi.hpp"
-
-std::string toUpperUnderscore(std::string str) {
-    std::string result;
-
-    for (std::string::iterator it = str.begin(); it != str.end(); ++it) {
-        if (*it == '-') {
-            result += '_';
-        } else {
-            result += toupper(*it);
-        }
-    }
-    return (result);
-}
+#include "../includes/Cgi.hpp"
 
 ft::Cgi::Cgi(std::string path,
              std::map<std::string, std::string> header,
@@ -141,3 +128,15 @@ std::string ft::Cgi::getResponse(void) const {
     return (this->_response);
 }
 
+std::string ft::Cgi::toUpperUnderscore(std::string str) {
+    std::string result;
+
+    for (std::string::iterator it = str.begin(); it != str.end(); ++it) {
+        if (*it == '-') {
+            result += '_';
+        } else {
+            result += toupper(*it);
+        }
+    }
+    return (result);
+}

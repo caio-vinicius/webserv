@@ -6,13 +6,12 @@
 
 #include <unistd.h>
 #include <sys/wait.h>
+#include <stdlib.h>
 
 #include <iostream>
 #include <map>
-#include <string>
 #include <vector>
 #include <cstring>
-#include <cstdlib>
 
 namespace ft {
 class Cgi {
@@ -42,6 +41,7 @@ class Cgi {
     void closeProcess(void);
     void runChild(void);
     void runParent(void);
+    std::string toUpperUnderscore(std::string str);
 };
 
 }  // namespace ft

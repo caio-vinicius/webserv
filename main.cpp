@@ -1,17 +1,11 @@
 /* Copyright (c) 2023 Caio Souza, Guilherme Martinelli, Luigi Ferrari. */
 /* All rights reserved. 42 */
 
-#include <stdlib.h>
-
-#include <iostream>
-#include <csignal>
-#include <cstring>
-
-#include "./Config.hpp"
-#include "./Server.hpp"
+#include "./includes/Config.hpp"
+#include "./includes/Server.hpp"
 
 int main(int argc, char **argv) {
-    const char* configFilePath = "./webserv.conf";
+    const char* configFilePath = "./conf/webserv.conf";
 
     if (argc > 2) {
         exit(EXIT_FAILURE);

@@ -1,8 +1,20 @@
 NAME = webserv
 
-
 MAIN := main.cpp
-SRCS := Utils.cpp Config.cpp Server.cpp Method.cpp Response.cpp Cgi.cpp
+
+METHOD_DIR := src/method
+
+CONFIG_DIR := src/config
+
+METHOD_SRC := $(METHOD_DIR)/Method.cpp $(METHOD_DIR)/Get.cpp \
+		$(METHOD_DIR)/Delete.cpp $(METHOD_DIR)/MethodNotAllowed.cpp \
+		$(METHOD_DIR)/Post.cpp
+
+CONFIG_SRC := $(CONFIG_DIR)/Config.cpp $(CONFIG_DIR)/Server.cpp \
+		$(CONFIG_DIR)/Location.cpp
+
+SRCS := src/Utils.cpp src/Server.cpp src/Response.cpp \
+		src/Cgi.cpp $(METHOD_SRC) $(CONFIG_SRC)
 
 CFLAGS := -Wall -Wextra -Wfatal-errors -std=c++98 -pedantic -g -pedantic-errors
 
