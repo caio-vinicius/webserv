@@ -18,8 +18,7 @@ ft::Config::Server::Server() {
 
     std::vector<std::string> param;
     param.push_back("listen");
-    param.push_back("localhost:80");
-    param.push_back("localhost:8000");
+    param.push_back("localhost:4242");
     processListen(param);
 
     param.clear();
@@ -92,8 +91,12 @@ void ft::Config::Server::processErrorPage(std::vector<std::string> &param) {
     param.pop_back();
     it = param.begin();
     it++;
+    int code = 0;
     while (it != param.end()) {
-        error_page.code.insert(std::atoi(it->c_str()));
+        code = std::atoi(it->c_str());
+        if (code) {
+            error_page.code.insert(code);
+        }
         it++;
     }
     this->error_page.push_back(error_page);
@@ -183,14 +186,15 @@ void ft::Config::parseLocation(
 
 void ft::Config::parseServer(std::ifstream &file) {
     std::string token;
-    std::vector<std::string> param;
     ft::Config::Server current_server = ft::Config::Server();
     std::map
         <std::string,
         void(ft::Config::Server::*)(std::vector<std::string> &)>
         ::iterator it;
 
+    std::vector<std::string> param;
     while (getline(file, token, '\n')) {
+        param.clear();
         if (token.find("location") != std::string::npos && \
             token.find("{") != std::string::npos) {
             this->parseLocation(file, token, current_server);
@@ -214,6 +218,9 @@ void ft::Config::parseServer(std::ifstream &file) {
         param = utils::split(&token, ' ');
         if (param.size() == 0) {
             continue;
+        } else if (param.size() == 1) {
+            std::cerr << "webserv: [emerg] syntax error" << std::endl;
+            exit(EXIT_FAILURE);
         }
         it = current_server.params.find(param[0]);
         if (it != current_server.params.end()) {
@@ -221,6 +228,7 @@ void ft::Config::parseServer(std::ifstream &file) {
         } else {
             std::cerr << "webserv: [emerg] param not found: '" << \
                 param[0] << "'" << std::endl;
+                exit(EXIT_FAILURE);
         }
     }
     std::cerr << "webserv: [emerg] syntax error server not closed" << std::endl;
@@ -234,6 +242,9 @@ void ft::Config::parse(std::string path) {
     }
 
     std::cout << "Loading Server Config" << std::endl;
+    if (file.peek() == std::ifstream::traits_type::eof()) {
+
+    }
     std::string line;
     while (getline(file, line)) {
         std::istringstream iss(line);

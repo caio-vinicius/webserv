@@ -1,15 +1,17 @@
 NAME = webserv
 
-all: $(NAME)
 
-SRCS = main.cpp Utils.cpp Config.cpp Server.cpp Method.cpp Response.cpp Cgi.cpp
+MAIN := main.cpp
+SRCS := Utils.cpp Config.cpp Server.cpp Method.cpp Response.cpp Cgi.cpp
 
 CFLAGS := -Wall -Wextra -Wfatal-errors -std=c++98 -pedantic -g -pedantic-errors
 
 CC := c++
 
-$(NAME): main.cpp
-	$(CC) $(CFLAGS) -o $(NAME) $(SRCS)
+all: $(NAME)
+
+$(NAME): $(SRCS)
+	$(CC) $(CFLAGS) -o $(NAME) $(MAIN) $(SRCS)
 
 clean:
 	rm -f $(NAME)

@@ -29,6 +29,10 @@
 ft::Server::Server(Config config): _config(config) {
     ft::Config::servers server = config.server;
     this->_sockets = this->createSockets(server);
+    if (this->_sockets.size() == 0) {
+        std::cout << "Error creating sockets" << std::endl;
+        exit(1);
+    }
 }
 
 ft::Server::~Server() {

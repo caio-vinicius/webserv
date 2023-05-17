@@ -140,3 +140,4 @@ void ft::Cgi::run(void) {
 std::string ft::Cgi::getResponse(void) const {
     return (this->_response);
 }
+
