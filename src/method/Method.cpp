@@ -69,7 +69,8 @@ void ft::Method::setBody(ft::Config::Server *server,
     if (file.is_open() == false) {
         res.setStatusLine(HTTP_STATUS_NOT_FOUND);
         setBodyErrorPage(server, res, 404);
-    } else if (res.getPath().find(".py") != std::string::npos) {
+    } else if (res.getPath().find(".py") != std::string::npos ||
+               res.getPath().find(".pl") != std::string::npos) {
         ft::Cgi cgi(res.getPath(), header, body);
         try {
             cgi.run();

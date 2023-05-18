@@ -31,7 +31,8 @@ std::string ft::Post::buildResponse(
     res.setPath(filePath);
     file.open(filePath.c_str());
     if (file.is_open()) {
-        if (res.getPath().find(".py") != std::string::npos) {
+        if (res.getPath().find(".py") != std::string::npos ||
+            res.getPath().find(".pl") != std::string::npos) {
             res.setStatusLine(HTTP_STATUS_CREATED);
             setBodyErrorPage(server, res, 201);
         } else {

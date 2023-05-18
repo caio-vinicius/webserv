@@ -72,7 +72,11 @@ char **vectorToChar(std::vector<std::string> &vec) {
 char **ft::Cgi::createArgv(void) {
     std::vector<std::string> argv;
 
-    argv.push_back("python3");
+    if (this->_path.find(".py") != std::string::npos) {
+        argv.push_back("python3");
+    } else if (this->_path.find(".pl") != std::string::npos) {
+        argv.push_back("perl");
+    }
     argv.push_back(this->_path);
     return (vectorToChar(argv));
 }
@@ -95,7 +99,11 @@ void ft::Cgi::runChild(void) {
     dup2(this->_pipe_fd[1], STDOUT_FILENO);
     char **argv = this->createArgv();
     char **envp = this->createEnvp();
-    execve("/usr/bin/python3", argv, envp);
+    if (this->_path.find(".py") != std::string::npos) {
+        execve("/usr/bin/python3", argv, envp);
+    } else if (this->_path.find(".pl") != std::string::npos) {
+        execve("/usr/bin/perl", argv, envp);
+    }
     delete argv;
     delete envp;
     exit(0);
