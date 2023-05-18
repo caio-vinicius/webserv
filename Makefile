@@ -16,7 +16,7 @@ CONFIG_SRC := $(CONFIG_DIR)/Config.cpp $(CONFIG_DIR)/Server.cpp \
 SRCS := src/Utils.cpp src/Server.cpp src/Response.cpp \
 		src/Cgi.cpp $(METHOD_SRC) $(CONFIG_SRC)
 
-CFLAGS := -Wall -Wextra -Wfatal-errors -std=c++98 -pedantic -g -pedantic-errors
+CFLAGS := -Wall -Wextra -Wfatal-errors -std=c++98 -pedantic -pedantic-errors
 
 CC := c++
 
