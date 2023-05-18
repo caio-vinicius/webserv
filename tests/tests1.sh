@@ -4,7 +4,7 @@
 # Webserv tests with curl. All tests are based on the configuration file below:
 
 #    server {
-#        listen localhost:8080 localhost:8084
+#        listen localhost:8090 localhost:8084
 #        server_name server1 banana pera
 #        error_page 400 /errora.html
 #        error_page 300 404 /error.html
@@ -56,42 +56,42 @@
 
 # Tests
 
-# Port 8080
+# Port 8090
 
 # 1. GET request with a valid path
-curl -i localhost:8080/index.html
+curl -i localhost:8090/index.html
 # 2. GET request with a valid path and a valid query string
-curl -i localhost:8080/index.html?query=string
+curl -i localhost:8090/index.html?query=string
 # 3. POST request with a valid path
-curl -i -X POST localhost:8080/gui.html -d "name=gui&age=21"
+curl -i -X POST localhost:8090/gui.html -d "name=gui&age=21"
 # 4. POST request with a valid path and a valid query string
-curl -i -X POST localhost:8080/gui.html?query=string
+curl -i -X POST localhost:8090/gui.html?query=string
 # 5. GET request with CGI path
-curl -i localhost:8080/cgi.py
+curl -i localhost:8090/cgi.py
 # 6. POST request with CGI path
-curl -i -X POST localhost:8080/cgi.py
+curl -i -X POST localhost:8090/cgi.py
 # 7. GET request with CGI path and a valid query string
-curl -i localhost:8080/cgi.py?query=string
+curl -i localhost:8090/cgi.py?query=string
 # 8. POST request with CGI path and a valid query string
-curl -i -X POST localhost:8080/cgi.py?query=string
+curl -i -X POST localhost:8090/cgi.py?query=string
 # 9. POST request with CGI path and a valid body
-curl -i -X POST localhost:8080/cgi.py -d "body=valid"
+curl -i -X POST localhost:8090/cgi.py -d "body=valid"
 # 10. POST request with CGI path, a valid body and a valid query string
-curl -i -X POST localhost:8080/cgi.py?query=string -d "body=valid"
+curl -i -X POST localhost:8090/cgi.py?query=string -d "body=valid"
 # 11. GET request with not supported method
-curl -i -X PUT localhost:8080/index.html
+curl -i -X PUT localhost:8090/index.html
 # 12. GET request to test autoindex
-curl -i localhost:8080/pratodecomida
+curl -i localhost:8090/pratodecomida
 # 13. DELETE request to delete file
-curl -i -X DELETE localhost:8080/gui.html
+curl -i -X DELETE localhost:8090/gui.html
 # 14. DELETE request to delete directory
-curl -i -X DELETE localhost:8080/pratodecomida
+curl -i -X DELETE localhost:8090/pratodecomida
 # 15. DELETE request to delete file that does not exist
-curl -i -X DELETE localhost:8080/doesnotexist.html
+curl -i -X DELETE localhost:8090/doesnotexist.html
 # 16. POST request with a body bigger than client_max_body_size 50 bytes
-curl -i -X POST localhost:8080 -d "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+curl -i -X POST localhost:8090 -d "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 # 17. GET request with a body bigger than client_max_body_size 50 bytes
-curl -i -X GET localhost:8080 -d "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+curl -i -X GET localhost:8090 -d "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 
 # Port 8081 tests
 
