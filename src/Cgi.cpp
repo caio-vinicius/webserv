@@ -100,9 +100,13 @@ void ft::Cgi::runChild(void) {
     char **argv = this->createArgv();
     char **envp = this->createEnvp();
     if (this->_path.find(".py") != std::string::npos) {
-        execve("/usr/bin/python3", argv, envp);
+        if (execve("/usr/bin/python3", argv, envp) == -1) {
+            throw std::exception();
+        }
     } else if (this->_path.find(".pl") != std::string::npos) {
-        execve("/usr/bin/perl", argv, envp);
+        if (execve("/usr/bin/perl", argv, envp) == -1) {
+            throw std::exception();
+        }
     }
     delete argv;
     delete envp;
