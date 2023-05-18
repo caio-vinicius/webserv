@@ -20,10 +20,10 @@ std::string ft::Post::buildResponse(
         return (res.makeResponse());
     }
     if (header.count("Content-Length") == 0) {
-        return postErrorRespose(server, res,HTTP_STATUS_LENGTH_REQUIRED, 411);
+        return postErrorResponse(server, res, HTTP_STATUS_LENGTH_REQUIRED, 411);
     }
     if (body.size() > server->client_max_body_size) {
-        return postErrorRespose(server, res,
+        return postErrorResponse(server, res,
             HTTP_STATUS_REQUEST_ENTITY_TOO_LARGE, 413);
     }
 
@@ -69,11 +69,11 @@ std::string ft::Post::buildHeaderPost(const std::string &buffer, std::string pat
     return (header);
 }
 
-std::string ft::Post::postErrorRespose(ft::Config::Server *server, ft::Response res,
+std::string ft::Post::postErrorResponse(ft::Config::Server *server, ft::Response res,
     std::string statusLine, int statusCode) {
     res.setStatusLine(statusLine);
     setBodyErrorPage(server, res, statusCode);
-    res.setHeader(buildHeader(res.getBody(), res.getPath()));
+    res.setHeader(buildHeader(res.getBody(), ".html"));
     return (res.makeResponse());
 }
 

@@ -66,7 +66,7 @@ class Post : public Method {
     ~Post() {}
 
  protected:
-    std::string postErrorRespose(ft::Config::Server *server, ft::Response res,
+    std::string postErrorResponse(ft::Config::Server *server, ft::Response res,
     std::string statusLine, int statusCode);
     std::string buildHeaderPost(const std::string &buffer, std::string path);
     void createFile(std::string &path,
