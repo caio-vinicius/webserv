@@ -29,6 +29,11 @@ std::string ft::Delete::buildResponse(
         return (deleteErrorResponse(server, &res,
             HTTP_STATUS_METHOD_NOT_ALLOWED, 405));
     }
+    if (!location->redirection.empty()) {
+        res.setStatusLine(HTTP_STATUS_MOVED_PERMANENTLY);
+        res.setHeader(addRedirectionLocation(location->redirection));
+        return (res.makeResponse());
+    }
 
     filePath = createFilePath(server->root, header.at("Uri"));
     res.setPath(filePath);

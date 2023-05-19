@@ -141,3 +141,8 @@ std::string ft::Method::getErrorPage(ft::Config::Server *server, int code) {
     }
     return (errorPage);
 }
+
+
+std::string ft::Method::addRedirectionLocation(std::string url) {
+    return("Location: http://" + url);
+}

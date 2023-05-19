@@ -8,6 +8,7 @@ ft::Config::Server::Location::Location() {
     this->params["uri"] = &Location::processUri;
     this->params["allowed_methods"] = &Location::processAllowedMethods;
     this->params["autoindex"] = &Location::processAutoindex;
+    this->params["redirect"] = &Location::processRedirect;
 
     std::vector<std::string> param;
     param.push_back("uri");
@@ -58,4 +59,13 @@ void ft::Config::Server::Location::processAutoindex(
     } else {
         this->autoindex = false;
     }
+}
+
+void ft::Config::Server::Location::processRedirect(
+    std::vector<std::string> &param) {
+    std::string url;
+
+    if (param.size() != 2)
+        ft::webservEmergError("Redirect must contain the URL to be redirected");
+    this->redirection = param.at(1);
 }

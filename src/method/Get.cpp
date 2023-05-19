@@ -32,6 +32,11 @@ std::string ft::Get::buildResponse(
         res.setHeader(buildHeader(res.getBody(), res.getPath()));
         return (res.makeResponse());
     }
+    if (!location->redirection.empty()) {
+        res.setStatusLine(HTTP_STATUS_MOVED_PERMANENTLY);
+        res.setHeader(addRedirectionLocation(location->redirection));
+        return (res.makeResponse());
+    }
     if (location->autoindex == true && isDirectory(header.at("Uri"))) {
         res.setStatusLine(HTTP_STATUS_OK);
         res.setBody(getAutoIndex(server->root, header.at("Uri")));

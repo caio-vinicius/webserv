@@ -79,10 +79,12 @@ class Config::Server::Location {
     void processUri(std::vector<std::string> &param);
     std::map<std::string, void(ft::Config::Server::Location::*)
         (std::vector<std::string> &)> params;
+    void processRedirect(std::vector<std::string> &param);
 
     std::string uri;
     std::set<std::string> allowedMethods;
     bool autoindex;
+    std::string redirection;
 };  // class Config::Server::Location
 
 void webservEmergError(std::string cause);
