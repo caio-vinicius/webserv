@@ -20,17 +20,11 @@ std::string ft::Get::buildResponse(
         return (res.makeResponse());
     }
     if (body.size() > server->client_max_body_size) {
-        res.setStatusLine(HTTP_STATUS_REQUEST_ENTITY_TOO_LARGE);
-        setBodyErrorPage(server, res, 413);
-        res.setHeader(buildHeader(res.getBody(), res.getPath()));
-        return (res.makeResponse());
+        return errorResponse(server, &res, HTTP_STATUS_REQUEST_ENTITY_TOO_LARGE, 413);
     }
     location = getLocation(server, header.at("Uri"));
     if (location->allowedMethods.count(header.at("Method")) == 0) {
-        res.setStatusLine(HTTP_STATUS_METHOD_NOT_ALLOWED);
-        setBodyErrorPage(server, res, 405);
-        res.setHeader(buildHeader(res.getBody(), res.getPath()));
-        return (res.makeResponse());
+        return errorResponse(server, &res, HTTP_STATUS_METHOD_NOT_ALLOWED, 405);
     }
     if (!location->redirection.empty()) {
         res.setStatusLine(HTTP_STATUS_MOVED_PERMANENTLY);
@@ -48,9 +42,7 @@ std::string ft::Get::buildResponse(
         setBody(server, res, file, header, body);
         res.setHeader(buildHeader(res.getBody(), res.getPath()));
     } catch (std::exception &e) {
-        res.setStatusLine(HTTP_STATUS_INTERNAL_SERVER_ERROR);
-        setBodyErrorPage(server, res, 500);
-        res.setHeader(buildHeader(res.getBody(), res.getPath()));
+        return errorResponse(server, &res, HTTP_STATUS_NOT_FOUND, 404);
     }
     return (res.makeResponse());
 }

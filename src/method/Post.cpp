@@ -21,15 +21,15 @@ std::string ft::Post::buildResponse(
         return (res.makeResponse());
     }
     if (header.count("Content-Length") == 0) {
-        return postErrorResponse(server, &res, HTTP_STATUS_LENGTH_REQUIRED, 411);
+        return errorResponse(server, &res, HTTP_STATUS_LENGTH_REQUIRED, 411);
     }
     if (body.size() > server->client_max_body_size) {
-        return postErrorResponse(server, &res,
+        return errorResponse(server, &res,
             HTTP_STATUS_REQUEST_ENTITY_TOO_LARGE, 413);
     }
     location = getLocation(server, header.at("Uri"));
     if (location->allowedMethods.count(header.at("Method")) == 0) {
-        return (postErrorResponse(server, &res,
+        return (errorResponse(server, &res,
             HTTP_STATUS_METHOD_NOT_ALLOWED, 405));
     }
     if (!location->redirection.empty()) {
@@ -44,32 +44,21 @@ std::string ft::Post::buildResponse(
     if (file.is_open()) {
         if (res.getPath().find(".py") != std::string::npos ||
             res.getPath().find(".pl") != std::string::npos) {
-            postErrorResponse(server, &res, HTTP_STATUS_CREATED, 201);
+            errorResponse(server, &res, HTTP_STATUS_CREATED, 201);
         } else {
-            postErrorResponse(server, &res, HTTP_STATUS_SEE_OTHER, 303);
+            errorResponse(server, &res, HTTP_STATUS_SEE_OTHER, 303);
         }
     } else {
         try {
             createFile(filePath, body);
-            postErrorResponse(server, &res, HTTP_STATUS_CREATED, 201);
+            errorResponse(server, &res, HTTP_STATUS_CREATED, 201);
         } catch (std::exception &e) {
-            postErrorResponse(server, &res,
+            errorResponse(server, &res,
                 HTTP_STATUS_INTERNAL_SERVER_ERROR, 500);
         }
     }
     file.close();
     return (res.makeResponse());
-}
-
-std::string ft::Post::postErrorResponse(ft::Config::Server *server, ft::Response *res,
-    std::string statusLine, int statusCode) {
-    res->setStatusLine(statusLine);
-    setBodyErrorPage(server, *res, statusCode);
-    if (server->error_page.empty())
-        res->setHeader(buildHeader(res->getBody(), ".html"));
-    else
-        res->setHeader(buildHeader(res->getBody(), server->error_page.at(0).path));
-    return (res->makeResponse());
 }
 
 void ft::Post::createFile(std::string &path,

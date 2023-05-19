@@ -21,12 +21,12 @@ std::string ft::Delete::buildResponse(
         return (res.makeResponse());
     }
     if (body.size() > server->client_max_body_size) {
-        return (deleteErrorResponse(server, &res,
+        return (errorResponse(server, &res,
             HTTP_STATUS_REQUEST_ENTITY_TOO_LARGE, 413));
     }
     location = getLocation(server, header.at("Uri"));
     if (location->allowedMethods.count(header.at("Method")) == 0) {
-        return (deleteErrorResponse(server, &res,
+        return (errorResponse(server, &res,
             HTTP_STATUS_METHOD_NOT_ALLOWED, 405));
     }
     if (!location->redirection.empty()) {
@@ -40,21 +40,13 @@ std::string ft::Delete::buildResponse(
     file.open(filePath.c_str());
     if (file.is_open()) {
         if (std::remove(filePath.c_str())) {
-            deleteErrorResponse(server, &res, HTTP_STATUS_INTERNAL_SERVER_ERROR, 500);
+            errorResponse(server, &res, HTTP_STATUS_INTERNAL_SERVER_ERROR, 500);
         } else {
-            deleteErrorResponse(server, &res, HTTP_STATUS_NO_CONTENT, 204);
+            errorResponse(server, &res, HTTP_STATUS_NO_CONTENT, 204);
         }
     } else {
-        deleteErrorResponse(server, &res, HTTP_STATUS_NOT_FOUND, 404);
+        errorResponse(server, &res, HTTP_STATUS_NOT_FOUND, 404);
     }
     file.close();
     return (res.makeResponse());
-}
-
-std::string ft::Delete::deleteErrorResponse(ft::Config::Server *server, ft::Response *res,
-    std::string statusLine, int statusCode) {
-    res->setStatusLine(statusLine);
-    setBodyErrorPage(server, *res, statusCode);
-    res->setHeader(buildHeader(res->getBody(), res->getPath()));
-    return (res->makeResponse());
 }

@@ -41,6 +41,14 @@ ft::Config::Server::Location *ft::Method::getLocation(ft::Config::Server *server
     return (currentLocation);
 }
 
+std::string ft::Method::errorResponse(ft::Config::Server *server, ft::Response *res,
+    std::string statusLine, int statusCode) {
+    res->setStatusLine(statusLine);
+    setBodyErrorPage(server, *res, statusCode);
+    res->setHeader(buildHeader(res->getBody(), res->getPath()));
+    return (res->makeResponse());
+}
+
 std::string ft::Method::buildHeader(const std::string &buffer, std::string path) {
     std::string extension;
     std::string header;

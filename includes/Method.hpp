@@ -24,8 +24,10 @@ class Method {
     virtual ~Method() {}
 
  protected:
-     ft::Config::Server::Location *getLocation(ft::Config::Server *server,
-    std::string uri);
+    ft::Config::Server::Location *getLocation(ft::Config::Server *server,
+        std::string uri);
+    std::string errorResponse(ft::Config::Server *server, ft::Response *res,
+        std::string statusLine, int statusCode);
     void setBodyErrorPage(ft::Config::Server *server, ft::Response& res, int code);
     void setBody(ft::Config::Server *server,
              ft::Response &res,
@@ -68,8 +70,6 @@ class Post : public Method {
     ~Post() {}
 
  protected:
-    std::string postErrorResponse(ft::Config::Server *server, ft::Response *res,
-    std::string statusLine, int statusCode);
     void createFile(std::string &path,
                 const ft::Server::bodyType &body);
 };
@@ -82,10 +82,6 @@ class Delete : public Method {
         const ft::Server::bodyType &body,
         ft::Config::Server *server);
     ~Delete() {}
-
- protected:
-    std::string deleteErrorResponse(ft::Config::Server *server, ft::Response *res,
-            std::string statusLine, int statusCode);
 };
 
 class MethodNotAllowed : public Method {
