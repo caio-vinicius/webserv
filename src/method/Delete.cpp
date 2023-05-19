@@ -20,10 +20,8 @@ std::string ft::Delete::buildResponse(
         return (res.makeResponse());
     }
     if (body.size() > server->client_max_body_size) {
-        res.setStatusLine(HTTP_STATUS_REQUEST_ENTITY_TOO_LARGE);
-        setBodyErrorPage(server, res, 413);
-        res.setHeader(buildHeader(res.getBody(), res.getPath()));
-        return (res.makeResponse());
+        return (deleteErrorResponse(server, &res,
+            HTTP_STATUS_REQUEST_ENTITY_TOO_LARGE, 413));
     }
 
     filePath = createFilePath(server->root, header.at("Uri"));
@@ -31,32 +29,21 @@ std::string ft::Delete::buildResponse(
     file.open(filePath.c_str());
     if (file.is_open()) {
         if (std::remove(filePath.c_str())) {
-            res.setStatusLine(HTTP_STATUS_INTERNAL_SERVER_ERROR);
-            setBodyErrorPage(server, res, 500);
-            res.setHeader(buildHeaderDelete(res.getBody(), res.getPath()));
+            deleteErrorResponse(server, &res, HTTP_STATUS_INTERNAL_SERVER_ERROR, 500);
         } else {
-            res.setStatusLine(HTTP_STATUS_NO_CONTENT);
-            setBodyErrorPage(server, res, 204);
-            res.setHeader(buildHeaderDelete(res.getBody(), res.getPath()));
+            deleteErrorResponse(server, &res, HTTP_STATUS_NO_CONTENT, 204);
         }
     } else {
-        res.setStatusLine(HTTP_STATUS_NOT_FOUND);
-        setBodyErrorPage(server, res, 404);
-        res.setHeader(buildHeaderDelete(res.getBody(), res.getPath()));
+        deleteErrorResponse(server, &res, HTTP_STATUS_NOT_FOUND, 404);
     }
     file.close();
     return (res.makeResponse());
 }
 
-std::string ft::Delete::buildHeaderDelete(const std::string &buffer, std::string path) {
-    std::string header;
-
-    (void)buffer;
-    header += "Server: 42webserv/1.0";
-    header += CRLF;
-    header += "Emoji: 🐴";
-    header += CRLF;
-    header += "Location: " + path;
-    header += CRLF;
-    return (header);
+std::string ft::Delete::deleteErrorResponse(ft::Config::Server *server, ft::Response *res,
+    std::string statusLine, int statusCode) {
+    res->setStatusLine(statusLine);
+    setBodyErrorPage(server, *res, statusCode);
+    res->setHeader(buildHeader(res->getBody(), res->getPath()));
+    return (res->makeResponse());
 }

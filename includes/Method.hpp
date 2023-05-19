@@ -66,9 +66,8 @@ class Post : public Method {
     ~Post() {}
 
  protected:
-    std::string postErrorResponse(ft::Config::Server *server, ft::Response res,
+    std::string postErrorResponse(ft::Config::Server *server, ft::Response *res,
     std::string statusLine, int statusCode);
-    std::string buildHeaderPost(const std::string &buffer, std::string path);
     void createFile(std::string &path,
                 const ft::Server::bodyType &body);
 };
@@ -83,7 +82,8 @@ class Delete : public Method {
     ~Delete() {}
 
  protected:
-    std::string buildHeaderDelete(const std::string &buffer, std::string path);
+    std::string deleteErrorResponse(ft::Config::Server *server, ft::Response *res,
+            std::string statusLine, int statusCode);
 };
 
 class MethodNotAllowed : public Method {

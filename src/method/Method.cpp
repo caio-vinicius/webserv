@@ -102,6 +102,7 @@ void ft::Method::setBodyErrorPage(ft::Config::Server *server, ft::Response& res,
         file.close();
     } else {
         res.setBody(makeHtml(res.getStatusLine()));
+        res.setPath(".html");
     }
 }
 
