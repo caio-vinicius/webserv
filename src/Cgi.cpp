@@ -27,7 +27,7 @@ void ft::Cgi::createEnv(void) {
     this->_env["CONTENT_LENGTH"] = "";
     this->_env["CONTENT_TYPE"] = "";
     this->_env["GATEWAY_INTERFACE"] = "CGI/1.1";
-    this->_env["PATH_INFO"] = this->_header["Uri"];
+    this->_env["PATH_INFO"] = this->_path;
     this->_env["PATH_TRANSLATED"] = "";
     this->_env["QUERY_STRING"] = this->_body;
     this->_env["REMOTE_ADDR"] = "";
