@@ -63,6 +63,9 @@ std::string ft::Get::getAutoIndex(std::string root, std::string uri) {
         while ((ent = readdir(dir)) != NULL) {
             if (isCurrentDirectory(ent->d_name)) {
                ss << "<a href=\"" << uri << "\">" << ent->d_name << "</a><br>";
+            } else if (uri.compare("/") == 0) {
+                ss << "<a href=\"" << uri << ent->d_name <<
+                    "\">" << ent->d_name << "</a><br>";
             } else {
                 ss << "<a href=\"" << uri << "/" << ent->d_name <<
                     "\">" << ent->d_name << "</a><br>";

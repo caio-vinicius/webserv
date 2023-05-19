@@ -19,6 +19,7 @@ ft::Config::Server::Location::Location() {
     param.push_back("GET");
     param.push_back("POST");
     param.push_back("DELETE");
+    processAllowedMethods(param);
 
     param.clear();
     param.push_back("autoindex");
