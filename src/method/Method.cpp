@@ -26,6 +26,21 @@ std::string ft::Method::makeHtml(std::string statusLine) {
     return (html);
 }
 
+ft::Config::Server::Location *ft::Method::getLocation(ft::Config::Server *server,
+    std::string uri) {
+    std::map<std::string, ft::Config::Server::Location>::iterator locationIt;
+    ft::Config::Server::Location *currentLocation;
+
+    locationIt = server->location.begin();
+    while (locationIt != server->location.end()) {
+        if (uri.find(locationIt->first) == 0) {
+            currentLocation = &(locationIt->second);
+        }
+        locationIt++;
+    }
+    return (currentLocation);
+}
+
 std::string ft::Method::buildHeader(const std::string &buffer, std::string path) {
     std::string extension;
     std::string header;

@@ -75,11 +75,13 @@ class Config::Server::Location {
     ~Location() {}
 
     void processAutoindex(std::vector<std::string> &param);
+    void processAllowedMethods(std::vector<std::string> &param);
     void processUri(std::vector<std::string> &param);
     std::map<std::string, void(ft::Config::Server::Location::*)
         (std::vector<std::string> &)> params;
 
     std::string uri;
+    std::set<std::string> allowedMethods;
     bool autoindex;
 };  // class Config::Server::Location
 

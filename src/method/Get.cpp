@@ -11,6 +11,7 @@ std::string ft::Get::buildResponse(
     ft::Config::Server *server) {
     ft::Response res;
     std::ifstream file;
+    ft::Config::Server::Location *location;
 
     if (server == NULL) {
         res.setStatusLine(HTTP_STATUS_BAD_REQUEST);
@@ -24,34 +25,29 @@ std::string ft::Get::buildResponse(
         res.setHeader(buildHeader(res.getBody(), res.getPath()));
         return (res.makeResponse());
     }
-
-    ft::Config::Server::Location *location;
     location = getLocation(server, header.at("Uri"));
+    if (location->allowedMethods.count(header.at("Method")) == 0) {
+        res.setStatusLine(HTTP_STATUS_METHOD_NOT_ALLOWED);
+        setBodyErrorPage(server, res, 405);
+        res.setHeader(buildHeader(res.getBody(), res.getPath()));
+        return (res.makeResponse());
+    }
     if (location->autoindex == true && isDirectory(header.at("Uri"))) {
         res.setStatusLine(HTTP_STATUS_OK);
         res.setBody(getAutoIndex(server->root, header.at("Uri")));
         res.setHeader(buildHeader(res.getBody(), res.getPath()));
         return (res.makeResponse());
     }
-    openFile(file, header.at("Uri"), server, res);
-    setBody(server, res, file, header, body);
-    res.setHeader(buildHeader(res.getBody(), res.getPath()));
-    return (res.makeResponse());
-}
-
-ft::Config::Server::Location *ft::Get::getLocation(ft::Config::Server *server,
-    std::string uri) {
-    std::map<std::string, ft::Config::Server::Location>::iterator locationIt;
-    ft::Config::Server::Location *currentLocation;
-
-    locationIt = server->location.begin();
-    while (locationIt != server->location.end()) {
-        if (uri.find(locationIt->first) == 0) {
-            currentLocation = &(locationIt->second);
-        }
-        locationIt++;
+    try {
+        openFile(file, header.at("Uri"), server, res);
+        setBody(server, res, file, header, body);
+        res.setHeader(buildHeader(res.getBody(), res.getPath()));
+    } catch (std::exception &e) {
+        res.setStatusLine(HTTP_STATUS_INTERNAL_SERVER_ERROR);
+        setBodyErrorPage(server, res, 500);
+        res.setHeader(buildHeader(res.getBody(), res.getPath()));
     }
-    return (currentLocation);
+    return (res.makeResponse());
 }
 
 std::string ft::Get::getAutoIndex(std::string root, std::string uri) {
@@ -82,15 +78,14 @@ void ft::Get::openFile(std::ifstream &file,
     std::string uri,
     ft::Config::Server *server,
     ft::Response &res) {
+    struct stat fileStat;
 
-    if (*(uri.end() - 1) != '/') {
-        res.setPath(createFilePath(server->root, uri));
-        file.open(res.getPath().c_str());
-        if (!file.is_open()) {
+    res.setPath(createFilePath(server->root, uri));
+    stat(res.getPath().c_str(), &fileStat);
+
+    if( fileStat.st_mode & S_IFDIR ) {
+        if (uri.at(uri.size() - 1) != '/')
             uri += "/";
-        }
-    }
-    if (file.is_open() == false) {
         for (size_t i = 0; i < server->index.size(); i++) {
             res.setPath(createFilePath(server->root, uri + server->index[i]));
             file.open(res.getPath().c_str());
@@ -98,7 +93,10 @@ void ft::Get::openFile(std::ifstream &file,
                 break;
             }
         }
-    }
+    } else if( fileStat.st_mode & S_IFREG )
+        file.open(res.getPath().c_str());
+    else
+        throw std::exception();
 }
 
 bool ft::Get::isDirectory(std::string uri) {

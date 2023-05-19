@@ -12,6 +12,7 @@ std::string ft::Post::buildResponse(
     ft::Response res;
     std::string filePath;
     std::ifstream file;
+    ft::Config::Server::Location *location;
 
     if (server == NULL) {
         res.setStatusLine(HTTP_STATUS_BAD_REQUEST);
@@ -25,6 +26,11 @@ std::string ft::Post::buildResponse(
     if (body.size() > server->client_max_body_size) {
         return postErrorResponse(server, &res,
             HTTP_STATUS_REQUEST_ENTITY_TOO_LARGE, 413);
+    }
+    location = getLocation(server, header.at("Uri"));
+    if (location->allowedMethods.count(header.at("Method")) == 0) {
+        return (postErrorResponse(server, &res,
+            HTTP_STATUS_METHOD_NOT_ALLOWED, 405));
     }
 
     filePath = createFilePath(server->root, header.at("Uri"));

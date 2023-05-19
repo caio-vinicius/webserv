@@ -5,6 +5,7 @@
 #define METHOD_HPP_
 
 #include <dirent.h>
+#include <sys/stat.h>
 
 #include "./Response.hpp"
 #include "./Server.hpp"
@@ -23,6 +24,8 @@ class Method {
     virtual ~Method() {}
 
  protected:
+     ft::Config::Server::Location *getLocation(ft::Config::Server *server,
+    std::string uri);
     void setBodyErrorPage(ft::Config::Server *server, ft::Response& res, int code);
     void setBody(ft::Config::Server *server,
              ft::Response &res,
@@ -46,8 +49,6 @@ class Get : public Method {
     ~Get() {}
 
  protected:
-    ft::Config::Server::Location *getLocation(ft::Config::Server *server,
-    std::string uri);
     std::string getAutoIndex(std::string root, std::string uri);
     bool isDirectory(std::string uri);
     bool isCurrentDirectory(char *name);
